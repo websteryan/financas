@@ -11,10 +11,5 @@
   </defs>
   <rect width="512" height="512" rx="128" fill="url(#bg)"/>
   <rect width="512" height="512" rx="128" fill="url(#hi)"/>
-  <g stroke="#fff" stroke-width="46" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M190 150V364"/>
-    <path d="M190 150H334"/>
-    <path d="M190 252H292"/>
-  </g>
-  <circle cx="352" cy="364" r="23" fill="#fff" fill-opacity="0.55"/>
+  <path fill="#fff" d="M176 128H372L338 186H234V236H318L286 292H234V384H176Z"/>
 </svg>

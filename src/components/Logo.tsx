@@ -1,6 +1,6 @@
 import { useId } from "react";
 
-/** Marca do app: "F." em roxo. */
+/** Marca do app: F de movimento (pontas no mesmo corte de 60°). */
 export function Logo({ size = 36, className = "" }: { size?: number; className?: string }) {
   const id = useId().replace(/:/g, "");
   return (
@@ -17,12 +17,7 @@ export function Logo({ size = 36, className = "" }: { size?: number; className?:
       </defs>
       <rect width="512" height="512" rx="128" fill={`url(#${id}b)`} />
       <rect width="512" height="512" rx="128" fill={`url(#${id}h)`} />
-      <g stroke="#fff" strokeWidth="46" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M190 150V364" />
-        <path d="M190 150H334" />
-        <path d="M190 252H292" />
-      </g>
-      <circle cx="352" cy="364" r="23" fill="#fff" fillOpacity="0.55" />
+      <path fill="#fff" d="M176 128H372L338 186H234V236H318L286 292H234V384H176Z" />
     </svg>
   );
 }
