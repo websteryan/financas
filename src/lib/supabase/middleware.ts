@@ -5,6 +5,15 @@ import { SUPABASE_KEY, SUPABASE_URL } from "./config";
 const PUBLIC_PATHS = ["/login", "/auth"];
 
 export async function updateSession(request: NextRequest) {
+  // Retorno do login (Google/e-mail) que caiu fora de /auth/callback: conclui por lá
+  const code = request.nextUrl.searchParams.get("code");
+  if (code && !request.nextUrl.pathname.startsWith("/auth")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/callback";
+    url.search = `?code=${encodeURIComponent(code)}`;
+    return NextResponse.redirect(url);
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(SUPABASE_URL, SUPABASE_KEY, {
