@@ -27,4 +27,5 @@ export {
   CloudSlash,
   ArrowRight,
   CalendarBlank,
+  GoogleLogo,
 } from "@phosphor-icons/react";

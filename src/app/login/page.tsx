@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Wallet } from "@/components/icons";
+import { GoogleLogo, Wallet } from "@/components/icons";
 import { Button, Field, Segmented, inputClass } from "@/components/ui";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { isCloud } from "@/lib/supabase/config";
@@ -15,6 +15,23 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+
+  async function google() {
+    if (!isCloud) {
+      window.location.href = "/";
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    const { error } = await supabaseBrowser().auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) {
+      setError("Não foi possível entrar com o Google. Tente novamente.");
+      setBusy(false);
+    }
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -66,6 +83,15 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={submit} className="card flex flex-col gap-4 p-5 sm:p-6">
+          <Button type="button" variant="primary" onClick={google} disabled={busy} className="h-12">
+            <GoogleLogo size={20} weight="bold" />
+            Entrar com Google
+          </Button>
+          <div className="flex items-center gap-3 text-[13px] text-muted">
+            <span className="h-px flex-1 bg-line" />
+            ou com e-mail
+            <span className="h-px flex-1 bg-line" />
+          </div>
           <Segmented
             value={mode}
             onChange={(m) => {
@@ -106,7 +132,7 @@ export default function LoginPage() {
             </p>
           )}
           {info && <p className="text-sm text-income">{info}</p>}
-          <Button type="submit" variant="primary" disabled={busy} className="mt-1">
+          <Button type="submit" variant="secondary" disabled={busy} className="mt-1">
             {busy ? "Aguarde..." : mode === "entrar" ? "Entrar" : "Criar conta"}
           </Button>
         </form>
