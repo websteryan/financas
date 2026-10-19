@@ -1,0 +1,30 @@
+"use client";
+
+// Ponto único de ícones (Phosphor). Trocar a biblioteca exige mudar só este arquivo.
+export {
+  House,
+  ListBullets,
+  ChartPieSlice,
+  Wallet,
+  Plus,
+  Minus,
+  CaretLeft,
+  CaretRight,
+  X,
+  CreditCard,
+  Bank,
+  PixLogo,
+  Money,
+  Trash,
+  MagnifyingGlass,
+  SignOut,
+  DownloadSimple,
+  PencilSimple,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Check,
+  WarningCircle,
+  CloudSlash,
+  ArrowRight,
+  CalendarBlank,
+} from "@phosphor-icons/react";

@@ -1,0 +1,163 @@
+@import "tailwindcss";
+
+/* Tokens de cor: tema claro e escuro seguem o sistema */
+:root {
+  --bg: #f6f6f8;
+  --surface: #fdfdfd;
+  --surface-2: #f0f0f3;
+  --line: #e6e6ea;
+  --fg: #17171c;
+  --muted: #6e6e78;
+  --accent: #6a55e0;
+  --accent-soft: #ecebfc;
+  --accent-fg: #fbfbff;
+  --income: #16894f;
+  --expense: #d63b44;
+  --shadow: 240 20% 30%;
+  --chart-income: #16894f;
+  --chart-expense: #6a55e0;
+  --grid: #ececf0;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d0d10;
+    --surface: #15151a;
+    --surface-2: #1d1d23;
+    --line: #26262e;
+    --fg: #ececf1;
+    --muted: #8d8d98;
+    --accent: #9584f7;
+    --accent-soft: #221f3d;
+    --accent-fg: #0f0d1f;
+    --income: #3ccf88;
+    --expense: #ff6b73;
+    --shadow: 240 30% 2%;
+    --chart-income: #25a565;
+    --chart-expense: #8270ea;
+    --grid: #22222a;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-fg: var(--accent-fg);
+  --color-income: var(--income);
+  --color-expense: var(--expense);
+  --color-chart-income: var(--chart-income);
+  --color-chart-expense: var(--chart-expense);
+  --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+html {
+  background: var(--bg);
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+
+/* iOS: evita zoom ao focar campos */
+@layer base {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .fade-in {
+    animation: fade-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Painel de lançamento: sobe no celular, aparece suave no computador */
+@media (prefers-reduced-motion: no-preference) {
+  .sheet-backdrop {
+    animation: backdrop-in 0.2s ease-out both;
+  }
+  .sheet-panel {
+    animation: sheet-up 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @media (min-width: 640px) {
+    .sheet-panel {
+      animation-name: sheet-pop;
+      animation-duration: 0.25s;
+    }
+  }
+}
+
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes sheet-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(8px);
+  }
+}
