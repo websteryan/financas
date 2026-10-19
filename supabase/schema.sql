@@ -8,7 +8,7 @@ create table if not exists public.accounts (
   user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
   name text not null,
   type text not null check (type in ('credito', 'debito', 'pix', 'dinheiro')),
-  color text not null default '#7c6af2',
+  color text not null default '#6d4af0',
   created_at timestamptz not null default now()
 );
 
@@ -70,7 +70,7 @@ security definer set search_path = ''
 as $$
 begin
   insert into public.accounts (user_id, name, type, color) values
-    (new.id, 'Cartão de crédito', 'credito', '#7c6af2'),
+    (new.id, 'Cartão de crédito', 'credito', '#6d4af0'),
     (new.id, 'Conta corrente', 'debito', '#3b82f6'),
     (new.id, 'Pix', 'pix', '#14b8a6');
 

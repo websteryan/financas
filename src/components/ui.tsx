@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { useEffect, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { Bank, CaretLeft, CaretRight, CreditCard, Money, PixLogo, X } from "./icons";
 import { currentYM, monthLabel, shiftYM, type YM } from "@/lib/format";
 import type { AccountType } from "@/lib/types";
@@ -204,6 +204,40 @@ export function Empty({ title, text, action }: { title: string; text: string; ac
       <p className="text-[15px] font-semibold">{title}</p>
       <p className="max-w-[32ch] text-sm text-muted">{text}</p>
       {action && <div className="mt-3">{action}</div>}
+    </div>
+  );
+}
+
+/** Aviso rápido no rodapé. Dispare com `showToast("texto")`. */
+export function showToast(message: string) {
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("app-toast", { detail: message }));
+}
+
+export function Toaster() {
+  const [msg, setMsg] = useState<{ id: number; text: string } | null>(null);
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const on = (e: Event) => {
+      setMsg({ id: Date.now(), text: String((e as CustomEvent).detail) });
+      clearTimeout(timer);
+      timer = setTimeout(() => setMsg(null), 2400);
+    };
+    window.addEventListener("app-toast", on);
+    return () => {
+      window.removeEventListener("app-toast", on);
+      clearTimeout(timer);
+    };
+  }, []);
+  if (!msg) return null;
+  return (
+    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-50 flex justify-center px-4 lg:bottom-8">
+      <p
+        key={msg.id}
+        role="status"
+        className="toast rounded-full bg-fg px-4 py-2.5 text-sm font-medium text-bg shadow-[0_8px_30px_hsl(var(--shadow)/0.3)]"
+      >
+        {msg.text}
+      </p>
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Minus, Plus, Trash } from "./icons";
-import { AccountGlyph, Button, Chip, Field, Segmented, Sheet, inputClass } from "./ui";
+import { AccountGlyph, Button, Chip, Field, Segmented, Sheet, inputClass, showToast } from "./ui";
 import { addMonthsISO, money, splitCents, todayISO, uid } from "@/lib/format";
 import { useFinance } from "@/lib/store";
 import type { Kind, NewTransaction } from "@/lib/types";
@@ -116,6 +116,7 @@ export function TransactionSheet() {
         }));
         await addTransactions(rows);
       }
+      showToast(editing ? "Alterações salvas" : kind === "despesa" ? "Gasto adicionado" : "Receita adicionada");
       closeSheet();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não foi possível salvar.");
@@ -129,6 +130,7 @@ export function TransactionSheet() {
     try {
       if (all && editing.group_id) await deleteGroup(editing.group_id);
       else await deleteTransaction(editing.id);
+      showToast(all ? "Parcelas excluídas" : "Lançamento excluído");
       closeSheet();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não foi possível excluir.");

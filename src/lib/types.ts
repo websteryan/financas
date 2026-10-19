@@ -39,7 +39,7 @@ export const ACCOUNT_TYPE_LABEL: Record<AccountType, string> = {
 };
 
 export const PALETTE = [
-  "#7c6af2",
+  "#6d4af0",
   "#3b82f6",
   "#14b8a6",
   "#22c55e",

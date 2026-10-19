@@ -15,6 +15,9 @@ export default function ResumoPage() {
   const f = useFinance();
   const t = totals(f.monthTx);
   const cats = byCategory(f.monthTx, f.categories, "despesa");
+  const series = monthlySeries(f.windowTx, f.month);
+  const prev = series[series.length - 2];
+  const delta = prev && prev.expense > 0 ? Math.round(((t.expense - prev.expense) / prev.expense) * 100) : null;
 
   return (
     <div className="fade-in">
@@ -35,7 +38,7 @@ export default function ResumoPage() {
         )}
         <div className="mt-5 flex flex-wrap gap-x-8 gap-y-3">
           <Stat label="Receitas" value={t.income} tone="income" loading={f.loading} />
-          <Stat label="Gastos" value={t.expense} tone="expense" loading={f.loading} />
+          <Stat label="Gastos" value={t.expense} tone="expense" loading={f.loading} delta={delta} prevLabel={prev?.label} />
           <div className="hidden sm:block">
             <Stat label="Lançamentos" count={f.monthTx.length} loading={f.loading} />
           </div>
@@ -55,7 +58,7 @@ export default function ResumoPage() {
             />
           }
         >
-          {f.loading ? <Skeleton className="h-[200px]" /> : <MonthlyBars data={monthlySeries(f.windowTx, f.month)} />}
+          {f.loading ? <Skeleton className="h-[200px]" /> : <MonthlyBars data={series} />}
         </Panel>
 
         <Panel
@@ -123,7 +126,11 @@ function Stat({
   count,
   tone,
   loading,
+  delta,
+  prevLabel,
 }: {
+  delta?: number | null;
+  prevLabel?: string;
   label: string;
   value?: number;
   count?: number;
@@ -146,6 +153,14 @@ function Stat({
       ) : (
         <p className={`num mt-0.5 text-[19px] font-semibold ${tone === "income" ? "text-income" : ""}`}>
           {value !== undefined ? money(value) : count}
+        </p>
+      )}
+      {!loading && delta != null && delta !== 0 && (
+        <p className="mt-0.5 text-[12px] text-muted">
+          <span className={delta > 0 ? "text-expense" : "text-income"}>
+            {delta > 0 ? "▲" : "▼"} {Math.abs(delta)}%
+          </span>{" "}
+          vs {prevLabel}
         </p>
       )}
     </div>

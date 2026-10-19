@@ -8,14 +8,14 @@
   --line: #e6e6ea;
   --fg: #17171c;
   --muted: #6e6e78;
-  --accent: #6a55e0;
-  --accent-soft: #ecebfc;
-  --accent-fg: #fbfbff;
+  --accent: #5a35e6;
+  --accent-soft: #e9e3ff;
+  --accent-fg: #ffffff;
   --income: #16894f;
   --expense: #d63b44;
   --shadow: 240 20% 30%;
   --chart-income: #16894f;
-  --chart-expense: #6a55e0;
+  --chart-expense: #5a35e6;
   --grid: #ececf0;
   color-scheme: light;
 }
@@ -28,14 +28,14 @@
     --line: #26262e;
     --fg: #ececf1;
     --muted: #8d8d98;
-    --accent: #9584f7;
-    --accent-soft: #221f3d;
+    --accent: #9d7dff;
+    --accent-soft: #2a2152;
     --accent-fg: #0f0d1f;
     --income: #3ccf88;
     --expense: #ff6b73;
     --shadow: 240 30% 2%;
     --chart-income: #25a565;
-    --chart-expense: #8270ea;
+    --chart-expense: #8b6dff;
     --grid: #22222a;
     color-scheme: dark;
   }
@@ -160,4 +160,14 @@ body {
     opacity: 0;
     transform: scale(0.97) translateY(8px);
   }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+.toast {
+  animation: toast-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
 }

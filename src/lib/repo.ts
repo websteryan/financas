@@ -96,7 +96,7 @@ const KEY = "financas-demo-v1";
 
 function seed(): LocalDB {
   const accounts: Account[] = [
-    { id: uid(), name: "Nubank", type: "credito", color: "#7c6af2" },
+    { id: uid(), name: "Nubank", type: "credito", color: "#6d4af0" },
     { id: uid(), name: "Itaú", type: "debito", color: "#f97316" },
     { id: uid(), name: "Pix", type: "pix", color: "#14b8a6" },
   ];

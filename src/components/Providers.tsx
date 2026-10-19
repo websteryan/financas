@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { FinanceProvider } from "@/lib/store";
 import { AppShell } from "./AppShell";
 import { TransactionSheet } from "./TransactionSheet";
+import { Toaster } from "./ui";
 
 export function Providers({ children }: { children: ReactNode }) {
   const path = usePathname() ?? "/";
@@ -13,6 +14,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <FinanceProvider>
       <AppShell>{children}</AppShell>
       <TransactionSheet />
+      <Toaster />
     </FinanceProvider>
   );
 }
