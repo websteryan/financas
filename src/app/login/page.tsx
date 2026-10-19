@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { GoogleLogo, Wallet } from "@/components/icons";
+import { GoogleLogo } from "@/components/icons";
+import { Logo } from "@/components/Logo";
 import { Button, Field, Segmented, inputClass } from "@/components/ui";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { isCloud } from "@/lib/supabase/config";
@@ -75,9 +76,7 @@ export default function LoginPage() {
     <main className="pt-safe flex min-h-[100dvh] items-center justify-center px-4 py-10">
       <div className="fade-in w-full max-w-[380px]">
         <div className="mb-8 flex flex-col items-center text-center">
-          <span className="bg-brand glow mb-4 inline-flex size-14 items-center justify-center rounded-full">
-            <Wallet size={24} weight="bold" />
-          </span>
+          <Logo size={72} className="mb-5 drop-shadow-[0_12px_28px_rgb(124_77_255/0.55)]" />
           <h1 className="text-[30px] font-semibold tracking-tight">Finanças</h1>
           <p className="mt-1 text-[15px] text-muted">Seus gastos e receitas, em qualquer aparelho.</p>
         </div>

@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChartPieSlice, House, ListBullets, Plus, Wallet } from "./icons";
+import { Logo } from "./Logo";
 import { useFinance } from "@/lib/store";
 
 const NAV = [
@@ -37,9 +38,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Barra lateral (computador) */}
       <aside className="glass fixed inset-y-3 left-3 z-30 hidden w-60 flex-col rounded-[28px] px-4 py-6 lg:flex">
         <div className="flex items-center gap-2.5 px-2">
-          <span className="bg-brand glow inline-flex size-9 items-center justify-center rounded-full">
-            <Wallet size={18} weight="bold" />
-          </span>
+          <Logo size={38} className="drop-shadow-[0_6px_14px_rgb(124_77_255/0.5)]" />
           <span className="text-[17px] font-semibold tracking-tight">Finanças</span>
         </div>
         <button
