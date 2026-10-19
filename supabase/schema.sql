@@ -40,6 +40,10 @@ create table if not exists public.transactions (
 
 create index if not exists transactions_user_date_idx on public.transactions (user_id, date desc);
 create index if not exists transactions_group_idx on public.transactions (group_id);
+create index if not exists transactions_account_idx on public.transactions (account_id);
+create index if not exists transactions_category_idx on public.transactions (category_id);
+create index if not exists accounts_user_idx on public.accounts (user_id);
+create index if not exists categories_user_idx on public.categories (user_id);
 
 -- Segurança: cada usuário só enxerga e altera os próprios dados
 alter table public.accounts enable row level security;
@@ -48,21 +52,21 @@ alter table public.transactions enable row level security;
 
 drop policy if exists "own accounts" on public.accounts;
 create policy "own accounts" on public.accounts
-  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+  for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 
 drop policy if exists "own categories" on public.categories;
 create policy "own categories" on public.categories
-  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+  for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 
 drop policy if exists "own transactions" on public.transactions;
 create policy "own transactions" on public.transactions
-  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+  for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 
 -- Ao criar uma conta de usuário, já cria contas e categorias padrão (pode editar depois)
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
-security definer set search_path = public
+security definer set search_path = ''
 as $$
 begin
   insert into public.accounts (user_id, name, type, color) values
@@ -88,6 +92,8 @@ begin
   return new;
 end;
 $$;
+
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
 
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
