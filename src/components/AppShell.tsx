@@ -35,16 +35,16 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-[100dvh]">
       {/* Barra lateral (computador) */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-line bg-surface px-4 py-6 lg:flex">
+      <aside className="glass fixed inset-y-3 left-3 z-30 hidden w-60 flex-col rounded-[28px] px-4 py-6 lg:flex">
         <div className="flex items-center gap-2.5 px-2">
-          <span className="inline-flex size-8 items-center justify-center rounded-[10px] bg-accent text-accent-fg">
+          <span className="bg-brand glow inline-flex size-9 items-center justify-center rounded-full">
             <Wallet size={18} weight="bold" />
           </span>
           <span className="text-[17px] font-semibold tracking-tight">Finanças</span>
         </div>
         <button
-          onClick={openNew}
-          className="mt-8 inline-flex h-11 items-center justify-center gap-2 rounded-[12px] bg-accent px-4 text-[15px] font-medium text-accent-fg transition-[transform,filter] hover:brightness-110 active:scale-[0.98]"
+          onClick={() => openNew()}
+          className="bg-brand glow mt-8 inline-flex h-12 items-center justify-center gap-2 rounded-full px-4 text-[15px] font-medium transition-[transform,filter] hover:brightness-110 active:scale-[0.98]"
         >
           <Plus size={18} weight="bold" />
           Novo lançamento
@@ -56,11 +56,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 key={href}
                 href={href}
-                className={`flex h-10 items-center gap-3 rounded-[12px] px-3 text-[15px] transition-colors ${
-                  active ? "bg-surface-2 font-medium text-fg" : "text-muted hover:bg-surface-2 hover:text-fg"
+                className={`flex h-11 items-center gap-3 rounded-full px-4 text-[15px] transition-colors ${
+                  active ? "bg-accent-soft font-medium text-fg" : "text-muted hover:bg-surface-2 hover:text-fg"
                 }`}
               >
-                <Icon size={19} weight={active ? "fill" : "regular"} />
+                <Icon size={19} weight={active ? "fill" : "regular"} className={active ? "text-accent-text" : ""} />
                 {label}
               </Link>
             );
@@ -71,28 +71,28 @@ export function AppShell({ children }: { children: ReactNode }) {
         </p>
       </aside>
 
-      <main className="pt-safe lg:pl-60">
-        <div className="mx-auto w-full max-w-5xl px-4 pb-32 pt-4 sm:px-6 lg:px-10 lg:pb-16 lg:pt-10">{children}</div>
+      <main className="pt-safe lg:pl-[16.5rem]">
+        <div className="mx-auto w-full max-w-5xl px-4 pb-36 pt-4 sm:px-6 lg:px-10 lg:pb-16 lg:pt-10">{children}</div>
       </main>
 
-      {/* Barra inferior (celular e tablet) */}
-      <nav className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/85 backdrop-blur-xl lg:hidden">
-        <div className="mx-auto grid h-16 max-w-lg grid-cols-5 items-center px-2">
-          {NAV.slice(0, 2).map((n) => (
-            <TabLink key={n.href} {...n} active={isActive(n.href)} />
-          ))}
-          <div className="flex justify-center">
-            <button
-              onClick={openNew}
-              aria-label="Novo lançamento"
-              className="inline-flex size-12 items-center justify-center rounded-full bg-accent text-accent-fg shadow-[0_6px_20px_hsl(var(--shadow)/0.25)] transition-transform active:scale-95"
-            >
-              <Plus size={22} weight="bold" />
-            </button>
+      {/* Barra inferior flutuante (celular e tablet) */}
+      <nav
+        aria-label="Navegação"
+        className="fixed inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-30 px-4 lg:hidden"
+      >
+        <div className="mx-auto flex max-w-md items-center gap-3">
+          <div className="glass flex h-16 flex-1 items-center justify-around rounded-full px-2 shadow-[0_12px_40px_hsl(var(--shadow)/0.6)]">
+            {NAV.map((n) => (
+              <TabLink key={n.href} {...n} active={isActive(n.href)} />
+            ))}
           </div>
-          {NAV.slice(2).map((n) => (
-            <TabLink key={n.href} {...n} active={isActive(n.href)} />
-          ))}
+          <button
+            onClick={() => openNew()}
+            aria-label="Novo lançamento"
+            className="bg-brand glow inline-flex size-16 shrink-0 items-center justify-center rounded-full transition-transform active:scale-95"
+          >
+            <Plus size={26} weight="bold" />
+          </button>
         </div>
       </nav>
     </div>
@@ -103,10 +103,13 @@ function TabLink({ href, label, icon: Icon, active }: (typeof NAV)[number] & { a
   return (
     <Link
       href={href}
-      className={`flex flex-col items-center gap-1 py-1 text-[11px] font-medium transition-colors ${active ? "text-accent" : "text-muted"}`}
+      aria-label={label}
+      title={label}
+      aria-current={active ? "page" : undefined}
+      className={`relative flex size-12 items-center justify-center rounded-full transition-colors ${active ? "text-accent-text" : "text-muted"}`}
     >
-      <Icon size={22} weight={active ? "fill" : "regular"} />
-      {label}
+      <Icon size={24} weight={active ? "fill" : "regular"} />
+      {active && <span className="absolute bottom-1 h-[3px] w-4 rounded-full bg-accent-text" />}
     </Link>
   );
 }

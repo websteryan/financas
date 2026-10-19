@@ -3,12 +3,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { currentYM, monthEnd, monthStart, shiftYM, type YM } from "./format";
 import { repo } from "./repo";
-import type { Account, Category, NewTransaction, Transaction } from "./types";
+import type { Account, Category, Kind, NewTransaction, Transaction } from "./types";
 
 /** Quantos meses (incluindo o selecionado) ficam carregados para os gráficos de evolução. */
 export const WINDOW_MONTHS = 6;
 
-type SheetState = { open: false } | { open: true; tx: Transaction | null };
+type SheetState = { open: false } | { open: true; tx: Transaction | null; kind?: Kind };
 
 interface Finance {
   month: YM;
@@ -23,7 +23,7 @@ interface Finance {
   error: string | null;
   reload: () => Promise<void>;
   sheet: SheetState;
-  openNew: () => void;
+  openNew: (kind?: Kind) => void;
   openEdit: (tx: Transaction) => void;
   closeSheet: () => void;
   addTransactions: (rows: NewTransaction[]) => Promise<void>;
@@ -106,7 +106,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       error,
       reload,
       sheet,
-      openNew: () => setSheet({ open: true, tx: null }),
+      openNew: (kind) => setSheet({ open: true, tx: null, kind }),
       openEdit: (tx) => setSheet({ open: true, tx }),
       closeSheet: () => setSheet({ open: false }),
       addTransactions: (rows) => run(() => repo.addTransactions(rows)),

@@ -66,7 +66,7 @@ export default function ContasPage() {
         <Panel
           title="Suas contas"
           action={
-            <Button className="h-9 px-3 text-sm" onClick={() => setAccDraft({ name: "", type: "credito", color: PALETTE[0] })}>
+            <Button className="h-10 px-4 text-sm" onClick={() => setAccDraft({ name: "", type: "credito", color: PALETTE[0] })}>
               <Plus size={16} weight="bold" /> Nova
             </Button>
           }
@@ -85,7 +85,7 @@ export default function ContasPage() {
                   <button
                     type="button"
                     onClick={() => setAccDraft(a)}
-                    className="flex w-full items-center gap-3 rounded-[12px] px-2 py-2.5 text-left transition-colors hover:bg-surface-2"
+                    className="flex w-full items-center gap-3 rounded-[20px] px-2 py-2.5 text-left transition-colors hover:bg-surface-2"
                   >
                     <AccountGlyph type={a.type} color={a.color} />
                     <span className="min-w-0 flex-1">
@@ -107,7 +107,7 @@ export default function ContasPage() {
         <Panel
           title="Categorias"
           action={
-            <Button className="h-9 px-3 text-sm" onClick={() => setCatDraft({ name: "", kind: "despesa", color: PALETTE[6] })}>
+            <Button className="h-10 px-4 text-sm" onClick={() => setCatDraft({ name: "", kind: "despesa", color: PALETTE[6] })}>
               <Plus size={16} weight="bold" /> Nova
             </Button>
           }
@@ -123,7 +123,7 @@ export default function ContasPage() {
                       key={c.id}
                       type="button"
                       onClick={() => setCatDraft(c)}
-                      className="inline-flex h-9 items-center gap-2 rounded-[12px] border border-line bg-surface px-3 text-sm text-fg transition-colors hover:bg-surface-2"
+                      className="inline-flex h-10 items-center gap-2 rounded-full border border-line bg-surface px-4 text-sm text-fg transition-colors hover:bg-surface-2"
                     >
                       <span className="size-2 rounded-full" style={{ background: c.color }} />
                       {c.name}
@@ -136,8 +136,8 @@ export default function ContasPage() {
 
         <Panel title="Dados" className="lg:col-span-2">
           {!isCloud && (
-            <div className="mb-5 flex gap-3 rounded-[12px] bg-accent-soft p-4 text-sm">
-              <CloudSlash size={20} className="mt-0.5 shrink-0 text-accent" />
+            <div className="mb-5 flex gap-3 rounded-[20px] bg-accent-soft p-4 text-sm">
+              <CloudSlash size={20} className="mt-0.5 shrink-0 text-accent-text" />
               <div>
                 <p className="font-medium text-fg">Modo demonstração</p>
                 <p className="mt-1 text-muted">
@@ -175,7 +175,7 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (c: string)
           aria-pressed={value === c}
           onClick={() => onChange(c)}
           className="size-8 rounded-full transition-transform active:scale-90"
-          style={{ background: c, boxShadow: value === c ? `0 0 0 2px var(--surface), 0 0 0 4px ${c}` : undefined }}
+          style={{ background: c, boxShadow: value === c ? `0 0 0 2px var(--sheet), 0 0 0 4px ${c}` : undefined }}
         />
       ))}
     </div>
@@ -268,7 +268,7 @@ function AccountSheet({ draft, onClose }: { draft: AccountDraft | null; onClose:
         <Field label="Cor">
           <ColorPicker value={form.color} onChange={(color) => setForm({ ...form, color })} />
         </Field>
-        <div className="flex items-center gap-3 rounded-[12px] bg-surface-2 p-3">
+        <div className="flex items-center gap-3 rounded-[20px] bg-surface-2 p-3">
           <AccountGlyph type={form.type} color={form.color} />
           <span className="text-[15px] font-medium">{form.name || "Nome da conta"}</span>
         </div>

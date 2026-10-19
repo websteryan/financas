@@ -56,7 +56,7 @@ export function TransactionSheet() {
       } catch {
         /* ignora */
       }
-      setKind("despesa");
+      setKind(sheet.kind ?? "despesa");
       setCents(0);
       setDescription("");
       setCategoryId(null);
@@ -173,7 +173,7 @@ export function TransactionSheet() {
           ) : (
             <div className="flex gap-2">
               {editing && (
-                <Button variant="danger" aria-label="Excluir" className="w-11 px-0" onClick={() => setConfirmDelete(true)}>
+                <Button variant="danger" aria-label="Excluir" className="w-12 px-0" onClick={() => setConfirmDelete(true)}>
                   <Trash size={18} weight="bold" />
                 </Button>
               )}
@@ -219,7 +219,7 @@ export function TransactionSheet() {
               const el = e.currentTarget;
               requestAnimationFrame(() => el.setSelectionRange(el.value.length, el.value.length));
             }}
-            className={`num w-full bg-transparent text-center text-[40px] font-semibold leading-tight outline-none focus-visible:outline-none ${
+            className={`num w-full bg-transparent text-center text-[44px] font-light leading-tight outline-none focus-visible:outline-none ${
               kind === "despesa" ? "text-fg" : "text-income"
             }`}
           />
@@ -261,8 +261,8 @@ export function TransactionSheet() {
                 type="button"
                 onClick={() => setAccountId(a.id)}
                 aria-pressed={accountId === a.id}
-                className={`flex h-12 shrink-0 items-center gap-2.5 rounded-[12px] border pl-2 pr-3.5 text-sm transition-colors ${
-                  accountId === a.id ? "border-accent bg-accent-soft text-fg" : "border-line bg-surface text-muted hover:text-fg"
+                className={`flex h-12 shrink-0 items-center gap-2.5 rounded-full border pl-2 pr-4 text-sm transition-colors ${
+                  accountId === a.id ? "border-accent/70 bg-accent-soft text-fg" : "border-line bg-surface text-muted hover:text-fg"
                 }`}
               >
                 <AccountGlyph type={a.type} color={a.color} size={30} />
@@ -274,7 +274,7 @@ export function TransactionSheet() {
 
         {canSplit && (
           <Field label="Parcelas">
-            <div className="flex items-center justify-between rounded-[12px] border border-line px-2 py-1.5">
+            <div className="flex items-center justify-between rounded-full border border-line bg-surface px-2 py-1.5">
               <button
                 type="button"
                 aria-label="Menos parcelas"

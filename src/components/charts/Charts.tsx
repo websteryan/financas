@@ -28,7 +28,7 @@ function niceMax(v: number): number {
 }
 
 /** Retângulo com cantos arredondados só no topo (ponta do dado), ancorado na base. */
-function topRoundedBar(x: number, y: number, w: number, h: number, r = 4): string {
+function topRoundedBar(x: number, y: number, w: number, h: number, r = 7): string {
   if (h <= 0) return "";
   const rr = Math.min(r, w / 2, h);
   return `M${x},${y + h}V${y + rr}Q${x},${y} ${x + rr},${y}H${x + w - rr}Q${x + w},${y} ${x + w},${y + rr}V${y + h}Z`;
@@ -39,7 +39,7 @@ function Tooltip({ x, y, width, children }: { x: number; y: number; width: numbe
   const left = Math.max(0, Math.min(width - w, x - w / 2));
   return (
     <div
-      className="pointer-events-none absolute z-10 rounded-[12px] border border-line bg-surface px-3 py-2 text-[13px] shadow-[0_8px_24px_hsl(var(--shadow)/0.18)]"
+      className="pointer-events-none absolute z-10 rounded-[16px] border border-line bg-sheet px-3.5 py-2.5 text-[13px] shadow-[0_12px_32px_hsl(var(--shadow)/0.6)]"
       style={{ left, top: Math.max(0, y), width: w }}
     >
       {children}
@@ -81,7 +81,7 @@ export function MonthlyBars({ data, height = 200 }: { data: MonthDatum[]; height
   const max = niceMax(Math.max(1, ...data.map((d) => Math.max(d.income, d.expense))));
   const ticks = [0, max / 2, max];
   const slot = data.length ? plotW / data.length : 0;
-  const barW = Math.max(4, Math.min(22, (slot - 14) / 2));
+  const barW = Math.max(5, Math.min(26, (slot - 16) / 2));
   const y = (v: number) => padT + plotH - (v / max) * plotH;
 
   return (
@@ -101,6 +101,14 @@ export function MonthlyBars({ data, height = 200 }: { data: MonthDatum[]; height
             const dim = hover !== null && hover !== i;
             return (
               <g key={d.key} style={{ opacity: dim ? 0.45 : 1, transition: "opacity 150ms" }}>
+                <rect
+                  x={cx - slot / 2 + 4}
+                  y={padT}
+                  width={Math.max(0, slot - 8)}
+                  height={plotH}
+                  rx={14}
+                  style={{ fill: d.current ? "rgb(255 255 255 / 0.07)" : "rgb(255 255 255 / 0.035)" }}
+                />
                 <path d={topRoundedBar(cx - barW - 1, y(d.income), barW, plotH + padT - y(d.income))} style={{ fill: "var(--chart-income)" }} />
                 <path d={topRoundedBar(cx + 1, y(d.expense), barW, plotH + padT - y(d.expense))} style={{ fill: "var(--chart-expense)" }} />
                 <text
@@ -195,7 +203,7 @@ export function BalanceLine({ values, labels, height = 180 }: { values: number[]
         <svg width={width} height={height} role="img" aria-label="Saldo acumulado ao longo do mês">
           <defs>
             <linearGradient id="bal-fill" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" style={{ stopColor: "var(--accent)", stopOpacity: 0.18 }} />
+              <stop offset="0%" style={{ stopColor: "var(--accent)", stopOpacity: 0.35 }} />
               <stop offset="100%" style={{ stopColor: "var(--accent)", stopOpacity: 0 }} />
             </linearGradient>
           </defs>
@@ -215,7 +223,7 @@ export function BalanceLine({ values, labels, height = 180 }: { values: number[]
             </g>
           ))}
           <path d={area} fill="url(#bal-fill)" />
-          <path d={line} fill="none" style={{ stroke: "var(--accent)" }} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+          <path d={line} fill="none" style={{ stroke: "var(--accent-text)" }} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
           {labels.map((l, i) =>
             i % step === 0 || i === labels.length - 1 ? (
               <text key={i} x={x(i)} y={height - 5} textAnchor="middle" style={{ fill: "var(--muted)", fontSize: 11 }}>
@@ -226,7 +234,7 @@ export function BalanceLine({ values, labels, height = 180 }: { values: number[]
           {hover !== null && (
             <g>
               <line x1={x(hover)} x2={x(hover)} y1={padT} y2={padT + plotH} style={{ stroke: "var(--muted)" }} strokeDasharray="3 3" />
-              <circle cx={x(hover)} cy={y(values[hover])} r={5} style={{ fill: "var(--accent)", stroke: "var(--surface)" }} strokeWidth={2} />
+              <circle cx={x(hover)} cy={y(values[hover])} r={5} style={{ fill: "var(--accent-text)", stroke: "var(--sheet)" }} strokeWidth={2} />
             </g>
           )}
         </svg>
@@ -269,7 +277,7 @@ export function RankBars({ items, limit }: { items: RankItem[]; limit?: number }
               <span className="num font-medium text-fg">{money(i.value)}</span>
             </span>
           </div>
-          <div className="h-1.5">
+          <div className="h-2 rounded-full bg-white/5">
             <div
               className="h-full rounded-full transition-[width] duration-500"
               style={{ width: `${Math.max(2, (i.value / max) * 100)}%`, background: i.color }}
@@ -291,6 +299,56 @@ export function CompositionBar({ items }: { items: RankItem[] }) {
       {sorted.map((i) => (
         <div key={i.id} title={`${i.label}: ${money(i.value)}`} style={{ flexGrow: i.value, flexBasis: 0, background: i.color, minWidth: 3 }} />
       ))}
+    </div>
+  );
+}
+
+/* ------------------------------------- Barras selecionáveis (Diário / Semanal / Mensal) */
+
+export interface StatBarDatum {
+  key: string;
+  label: string;
+  value: number;
+}
+
+export function StatBars({
+  data,
+  selected,
+  onSelect,
+  height = 190,
+}: {
+  data: StatBarDatum[];
+  selected: string;
+  onSelect: (key: string) => void;
+  height?: number;
+}) {
+  const max = Math.max(1, ...data.map((d) => d.value));
+  return (
+    <div className="flex w-full items-stretch gap-2.5 sm:gap-3.5" role="group" aria-label="Valores por período">
+      {data.map((d) => {
+        const on = d.key === selected;
+        const h = d.value > 0 ? Math.max(14, (d.value / max) * 100) : 6;
+        return (
+          <button
+            key={d.key}
+            type="button"
+            aria-pressed={on}
+            aria-label={`${d.label}: ${money(d.value)}`}
+            onClick={() => onSelect(d.key)}
+            className="group flex min-w-0 flex-1 flex-col items-center gap-2.5"
+          >
+            <span className="flex w-full items-end" style={{ height }}>
+              <span
+                className={`w-full rounded-[18px] transition-[height,background] duration-500 ease-out ${
+                  on ? "bg-brand glow" : "bg-gradient-to-b from-white/[0.14] to-white/[0.05] group-hover:from-white/[0.2]"
+                }`}
+                style={{ height: `${h}%` }}
+              />
+            </span>
+            <span className={`text-[13px] ${on ? "font-medium text-fg" : "text-muted"}`}>{d.label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

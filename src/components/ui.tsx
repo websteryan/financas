@@ -13,8 +13,8 @@ import type { AccountType } from "@/lib/types";
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-accent text-accent-fg hover:brightness-110",
-  secondary: "bg-surface-2 text-fg hover:bg-line",
+  primary: "bg-brand glow hover:brightness-110",
+  secondary: "tile text-fg hover:bg-surface-2",
   ghost: "text-muted hover:text-fg hover:bg-surface-2",
   danger: "bg-expense/10 text-expense hover:bg-expense/15",
 };
@@ -27,7 +27,7 @@ export function Button({
   return (
     <button
       {...props}
-      className={`inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-[12px] px-4 text-[15px] font-medium transition-[transform,background-color,filter] duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 ${variants[variant]} ${className}`}
+      className={`inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-full px-5 text-[15px] font-medium transition-[transform,background-color,filter] duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 ${variants[variant]} ${className}`}
     />
   );
 }
@@ -42,7 +42,7 @@ export function IconButton({
       aria-label={label}
       title={label}
       {...props}
-      className={`inline-flex size-10 shrink-0 items-center justify-center rounded-full text-muted transition-[transform,background-color,color] duration-150 hover:bg-surface-2 hover:text-fg active:scale-95 ${className}`}
+      className={`tile inline-flex size-10 shrink-0 items-center justify-center rounded-full text-fg/85 transition-[transform,background-color,color] duration-150 hover:bg-surface-2 hover:text-fg active:scale-95 ${className}`}
     />
   );
 }
@@ -59,7 +59,7 @@ export function Segmented<T extends string>({
   className?: string;
 }) {
   return (
-    <div role="tablist" className={`flex rounded-[12px] bg-surface-2 p-1 ${className}`}>
+    <div role="tablist" className={`flex gap-2 ${className}`}>
       {options.map((o) => (
         <button
           key={o.value}
@@ -67,8 +67,8 @@ export function Segmented<T extends string>({
           type="button"
           aria-selected={value === o.value}
           onClick={() => onChange(o.value)}
-          className={`h-9 flex-1 whitespace-nowrap rounded-[9px] px-3 text-sm font-medium transition-colors ${
-            value === o.value ? "bg-surface text-fg shadow-[0_1px_2px_hsl(var(--shadow)/0.12)]" : "text-muted hover:text-fg"
+          className={`h-11 flex-1 whitespace-nowrap rounded-full px-4 text-[15px] font-medium transition-all duration-200 ${
+            value === o.value ? "bg-brand glow" : "tile text-muted hover:text-fg"
           }`}
         >
           {o.label}
@@ -91,7 +91,7 @@ export function Field({ label, htmlFor, children, hint }: { label: string; htmlF
 }
 
 export const inputClass =
-  "h-11 w-full rounded-[12px] border border-line bg-surface px-3.5 text-fg placeholder:text-muted/80 outline-none transition-colors focus:border-accent";
+  "h-12 w-full rounded-[16px] border border-line bg-surface-2 px-4 text-fg placeholder:text-muted/70 outline-none transition-colors focus:border-accent";
 
 export function Chip({
   active,
@@ -109,8 +109,8 @@ export function Chip({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`inline-flex h-9 shrink-0 items-center gap-2 whitespace-nowrap rounded-[12px] border px-3 text-sm transition-colors ${
-        active ? "border-accent bg-accent-soft text-fg" : "border-line bg-surface text-muted hover:text-fg"
+      className={`inline-flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-sm transition-colors ${
+        active ? "border-accent/70 bg-accent-soft text-fg" : "border-line bg-surface text-muted hover:text-fg"
       }`}
     >
       {color && <span className="size-2 rounded-full" style={{ background: color }} />}
@@ -135,21 +135,21 @@ export function MonthPicker({ value, onChange }: { value: YM; onChange: (m: YM) 
   const now = currentYM();
   const isNow = value.y === now.y && value.m === now.m;
   return (
-    <div className="flex items-center gap-1">
-      <IconButton label="Mês anterior" onClick={() => onChange(shiftYM(value, -1))}>
-        <CaretLeft size={18} weight="bold" />
+    <div className="tile flex items-center rounded-full p-1">
+      <IconButton label="Mês anterior" onClick={() => onChange(shiftYM(value, -1))} className="size-9 border-0 bg-none shadow-none">
+        <CaretLeft size={16} weight="bold" />
       </IconButton>
       <button
         type="button"
         onClick={() => onChange(now)}
         disabled={isNow}
-        className="min-w-[7.5rem] rounded-[12px] px-2 py-1.5 text-center text-[15px] font-semibold text-fg disabled:cursor-default"
+        className="min-w-[6.5rem] rounded-full px-2 py-1.5 text-center text-[15px] font-semibold text-fg disabled:cursor-default"
         title={isNow ? undefined : "Voltar para o mês atual"}
       >
         {monthLabel(value)}
       </button>
-      <IconButton label="Próximo mês" onClick={() => onChange(shiftYM(value, 1))}>
-        <CaretRight size={18} weight="bold" />
+      <IconButton label="Próximo mês" onClick={() => onChange(shiftYM(value, 1))} className="size-9 border-0 bg-none shadow-none">
+        <CaretRight size={16} weight="bold" />
       </IconButton>
     </div>
   );
@@ -183,8 +183,8 @@ export function Sheet({
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-label={title}>
-      <button aria-label="Fechar" className="sheet-backdrop absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={onClose} />
-      <div className="sheet-panel relative flex max-h-[92dvh] w-full flex-col rounded-t-[24px] border border-line bg-surface shadow-[0_24px_80px_hsl(var(--shadow)/0.35)] sm:max-w-[460px] sm:rounded-[24px]">
+      <button aria-label="Fechar" className="sheet-backdrop absolute inset-0 bg-[#04030a]/70 backdrop-blur-[6px]" onClick={onClose} />
+      <div className="sheet-panel relative flex max-h-[92dvh] w-full flex-col rounded-t-[32px] border border-line bg-sheet shadow-[0_-12px_80px_rgb(112_62_255/0.25)] sm:max-w-[460px] sm:rounded-[32px]">
         <div className="flex items-center justify-between px-5 pb-2 pt-4">
           <h2 className="text-[17px] font-semibold">{title}</h2>
           <IconButton label="Fechar" onClick={onClose} className="-mr-2">
@@ -230,11 +230,11 @@ export function Toaster() {
   }, []);
   if (!msg) return null;
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-50 flex justify-center px-4 lg:bottom-8">
+    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(7.5rem+env(safe-area-inset-bottom))] z-50 flex justify-center px-4 lg:bottom-8">
       <p
         key={msg.id}
         role="status"
-        className="toast rounded-full bg-fg px-4 py-2.5 text-sm font-medium text-bg shadow-[0_8px_30px_hsl(var(--shadow)/0.3)]"
+        className="toast glass rounded-full px-5 py-3 text-sm font-medium text-fg shadow-[0_8px_30px_hsl(var(--shadow)/0.5)]"
       >
         {msg.text}
       </p>
@@ -243,5 +243,5 @@ export function Toaster() {
 }
 
 export function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse rounded-[12px] bg-surface-2 ${className}`} />;
+  return <div className={`animate-pulse rounded-[16px] bg-surface-2 ${className}`} />;
 }

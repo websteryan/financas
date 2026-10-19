@@ -49,14 +49,14 @@ export default function LancamentosPage() {
           ]}
         />
         <div className="relative flex-1">
-          <MagnifyingGlass size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+          <MagnifyingGlass size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
           <label htmlFor="busca" className="sr-only">
             Buscar
           </label>
           <input
             id="busca"
             type="search"
-            className={`${inputClass} pl-10`}
+            className={`${inputClass} rounded-full pl-11`}
             placeholder="Buscar por descrição ou categoria"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -77,8 +77,8 @@ export default function LancamentosPage() {
         </div>
       )}
 
-      <div className="card p-3 sm:p-4">
-        <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line px-2 pb-3 text-[13px] text-muted">
+      <div>
+        <div className="flex flex-wrap items-baseline justify-between gap-2 px-2 pb-1 text-[13px] text-muted">
           <span>
             {items.length} {items.length === 1 ? "lançamento" : "lançamentos"}
           </span>
@@ -87,7 +87,7 @@ export default function LancamentosPage() {
             {kind !== "receita" && <span className="text-fg">- {money(t.expense)}</span>}
           </span>
         </div>
-        <div className="pt-3">
+        <div className="pt-4">
           {f.loading ? (
             <div className="flex flex-col gap-3 p-2">
               {[0, 1, 2, 3].map((i) => (
@@ -100,7 +100,7 @@ export default function LancamentosPage() {
               text={f.monthTx.length ? "Tente outro filtro ou outra busca." : "Use o botão + para registrar o primeiro."}
               action={
                 !f.monthTx.length && (
-                  <Button variant="primary" onClick={f.openNew}>
+                  <Button variant="primary" onClick={() => f.openNew()}>
                     Novo lançamento
                   </Button>
                 )

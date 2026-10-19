@@ -75,15 +75,15 @@ export default function LoginPage() {
     <main className="pt-safe flex min-h-[100dvh] items-center justify-center px-4 py-10">
       <div className="fade-in w-full max-w-[380px]">
         <div className="mb-8 flex flex-col items-center text-center">
-          <span className="mb-4 inline-flex size-12 items-center justify-center rounded-[14px] bg-accent text-accent-fg">
+          <span className="bg-brand glow mb-4 inline-flex size-14 items-center justify-center rounded-full">
             <Wallet size={24} weight="bold" />
           </span>
-          <h1 className="text-[26px] font-semibold tracking-tight">Finanças</h1>
+          <h1 className="text-[30px] font-semibold tracking-tight">Finanças</h1>
           <p className="mt-1 text-[15px] text-muted">Seus gastos e receitas, em qualquer aparelho.</p>
         </div>
 
         <form onSubmit={submit} className="card flex flex-col gap-4 p-5 sm:p-6">
-          <Button type="button" variant="primary" onClick={google} disabled={busy} className="h-12">
+          <Button type="button" variant="primary" onClick={google} disabled={busy} className="h-14">
             <GoogleLogo size={20} weight="bold" />
             Entrar com Google
           </Button>
@@ -132,7 +132,7 @@ export default function LoginPage() {
             </p>
           )}
           {info && <p className="text-sm text-income">{info}</p>}
-          <Button type="submit" variant="secondary" disabled={busy} className="mt-1">
+          <Button type="submit" variant="secondary" disabled={busy} className="mt-1 h-12">
             {busy ? "Aguarde..." : mode === "entrar" ? "Entrar" : "Criar conta"}
           </Button>
         </form>
