@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import type { CSSProperties } from "react";
-import { ArrowDownLeft, ArrowRight, ArrowUpRight } from "@/components/icons";
-import { Donut, Legend, MonthlyBars, RankBars } from "@/components/charts/Charts";
+import { useState } from "react";
+import { ArrowDownLeft, ArrowRight, ArrowUpRight, CaretDown } from "@/components/icons";
+import { AccountBubbles, CashflowBars, Donut, RankBars, type CashDatum } from "@/components/charts/Charts";
 import { DemoBanner } from "@/components/DemoBanner";
-import { PageHeader, Panel } from "@/components/PageHeader";
+import { Panel } from "@/components/PageHeader";
 import { TransactionList } from "@/components/TransactionList";
-import { Button, Empty, Skeleton } from "@/components/ui";
-import { byCategory, monthlySeries } from "@/lib/derive";
+import { BigMoney, Button, Empty, MonthPicker, Skeleton } from "@/components/ui";
+import { Logo } from "@/components/Logo";
+import { byCategory, monthlySeries, statBuckets, type StatMode } from "@/lib/derive";
 import { money } from "@/lib/format";
 import { useCountUp } from "@/lib/motion";
 import { totals, useFinance } from "@/lib/store";
@@ -25,59 +26,89 @@ export default function ResumoPage() {
   const series = monthlySeries(f.windowTx, f.month);
   const prev = series[series.length - 2];
   const delta = prev && prev.expense > 0 ? Math.round(((t.expense - prev.expense) / prev.expense) * 100) : null;
-  const saved = t.income > 0 ? Math.round(((t.income - t.expense) / t.income) * 100) : null;
+
+  const [mode, setMode] = useState<StatMode>("semanal");
+  const [tab, setTab] = useState<"receita" | "despesa" | "economia">("despesa");
+  const [pick, setPick] = useState<string | null>(null);
 
   const balance = useCountUp(t.balance);
-  const income = useCountUp(t.income);
-  const expense = useCountUp(t.expense);
+
+  const bubbles = f.accounts
+    .map((a) => {
+      const own = f.monthTx.filter((x) => x.account_id === a.id);
+      const tt = totals(own);
+      return { id: a.id, label: a.name, value: tt.balance, weight: tt.income + tt.expense };
+    })
+    .sort((x, y) => y.weight - x.weight)
+    .slice(0, 3);
+
+  const buckets: CashDatum[] = (() => {
+    if (tab === "economia") {
+      const inc = statBuckets(mode, "receita", f.monthTx, f.windowTx, f.month);
+      const exp = statBuckets(mode, "despesa", f.monthTx, f.windowTx, f.month);
+      return inc.map((b, i) => ({ key: b.key, label: b.label, value: Math.max(0, b.value - (exp[i]?.value ?? 0)) }));
+    }
+    return statBuckets(mode, tab, f.monthTx, f.windowTx, f.month).map((b) => ({ key: b.key, label: b.label, value: b.value }));
+  })();
+  const flowTotal = buckets.reduce((s, b) => s + b.value, 0);
+  const current = buckets.find((b) => b.key === pick) ?? [...buckets].reverse().find((b) => b.value > 0) ?? buckets[buckets.length - 1];
 
   const donutItems = cats.length > 5 ? [...cats.slice(0, 4), { id: "outras", label: "Demais", color: "#6b6b78", value: cats.slice(4).reduce((a, c) => a + c.value, 0) }] : cats;
 
   return (
     <div className="fade-in">
       <DemoBanner />
-      <PageHeader title="Resumo" subtitle={`${greeting()}!`} />
+      <header className="mb-5 flex items-center gap-3 lg:mb-7">
+        <Logo size={40} className="lg:hidden" />
+        <div>
+          <p className="text-[14px] text-muted">{greeting()}</p>
+          <h1 className="text-[26px] font-semibold leading-tight tracking-tight lg:text-[34px]">Olá, bem-vindo</h1>
+        </div>
+      </header>
 
       {f.error && <p className="mb-4 rounded-[16px] bg-expense/10 px-4 py-3 text-sm text-expense">{f.error}</p>}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-5 lg:gap-5">
-        {/* Saldo */}
-        <section className="bg-brand rise rounded-[28px] p-5 sm:p-7 lg:col-span-3" style={{ "--i": 0 } as CSSProperties}>
-          <p className="text-[14px] font-medium opacity-70">Saldo do mês</p>
+        {/* Saldo + contas */}
+        <section className="card rise p-5 sm:p-6 lg:col-span-3">
+          <div className="flex items-start justify-between gap-3">
+            <p className="whitespace-nowrap pt-2 text-[16px] font-medium">Saldo do mês</p>
+            <MonthPicker value={f.month} onChange={f.setMonth} />
+          </div>
           {f.loading ? (
-            <Skeleton className="mt-2 h-12 w-56 bg-black/15" />
+            <Skeleton className="mt-3 h-11 w-56" />
           ) : (
-            <p className="num mt-1 text-[44px] font-semibold leading-none tracking-tight sm:text-[56px]">
-              {balance < 0 ? "-" : ""}
-              {money(Math.abs(balance))}
+            <p className={`mt-3 text-[40px] leading-none tracking-tight sm:text-[48px] ${balance < 0 ? "text-expense" : ""}`}>
+              <BigMoney cents={balance} />
             </p>
           )}
           {!f.loading && delta != null && delta !== 0 && (
-            <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-black/15 px-3 py-1 text-[13px] font-medium">
-              {delta > 0 ? "▲" : "▼"} {Math.abs(delta)}% em gastos vs {prev?.label}
+            <p className="mt-2.5 text-[13px] text-muted">
+              <span className={delta > 0 ? "text-expense" : "text-income"}>
+                {delta > 0 ? "▲" : "▼"} {Math.abs(delta)}%
+              </span>{" "}
+              em gastos vs {prev?.label}
             </p>
           )}
 
-          <div className="mt-6 grid grid-cols-3 gap-2.5">
-            <Pill label="Receitas" value={money(income)} />
-            <Pill label="Gastos" value={money(expense)} />
-            <Pill label="Economia" value={saved == null ? "-" : `${saved}%`} />
+          <div className="mt-5">
+            {f.loading ? <Skeleton className="h-[120px] rounded-[40px]" /> : bubbles.length > 0 ? <AccountBubbles items={bubbles} /> : null}
           </div>
 
           <div className="mt-5 grid grid-cols-2 gap-2.5">
             <button
               type="button"
-              onClick={() => f.openNew("despesa")}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#0b0816] text-[15px] font-semibold text-fg transition-transform active:scale-[0.97]"
+              onClick={() => f.openNew("receita")}
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-line text-[15px] font-medium transition-[transform,background-color] hover:bg-surface-2 active:scale-[0.97]"
             >
-              <ArrowUpRight size={18} weight="bold" /> Gasto
+              <ArrowDownLeft size={18} weight="bold" /> Nova receita
             </button>
             <button
               type="button"
-              onClick={() => f.openNew("receita")}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-black/25 text-[15px] font-semibold transition-transform active:scale-[0.97]"
+              onClick={() => f.openNew("despesa")}
+              className="tile inline-flex h-12 items-center justify-center gap-2 rounded-full text-[15px] font-medium transition-[transform,background-color] hover:bg-white/10 active:scale-[0.97]"
             >
-              <ArrowDownLeft size={18} weight="bold" /> Receita
+              <ArrowUpRight size={18} weight="bold" /> Novo gasto
             </button>
           </div>
         </section>
@@ -105,20 +136,54 @@ export default function ResumoPage() {
         </Panel>
 
         {/* Fluxo de caixa */}
-        <Panel
-          title="Fluxo dos últimos 6 meses"
-          className="rise lg:col-span-3"
-          action={
-            <Legend
-              items={[
-                { label: "Receitas", color: "var(--chart-income)" },
-                { label: "Gastos", color: "var(--chart-expense)" },
-              ]}
-            />
-          }
-        >
-          {f.loading ? <Skeleton className="h-[200px]" /> : <MonthlyBars data={series} />}
-        </Panel>
+        <section className="card rise p-5 sm:p-6 lg:col-span-3">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-[17px] font-medium">Fluxo de caixa</h2>
+            <label className="tile relative inline-flex h-10 items-center rounded-full pl-4 pr-9 text-[14px] font-medium">
+              <span className="sr-only">Período</span>
+              <select
+                value={mode}
+                onChange={(e) => {
+                  setMode(e.target.value as StatMode);
+                  setPick(null);
+                }}
+                className="cursor-pointer appearance-none bg-transparent pr-1 outline-none"
+              >
+                <option value="diario">Diário</option>
+                <option value="semanal">Semanal</option>
+                <option value="mensal">Mensal</option>
+              </select>
+              <CaretDown size={14} weight="bold" className="pointer-events-none absolute right-3.5 text-muted" />
+            </label>
+          </div>
+          <p className="mt-3 text-[34px] leading-none tracking-tight">{f.loading ? <Skeleton className="h-9 w-48" /> : <BigMoney cents={flowTotal} />}</p>
+          <div className="mt-4 grid grid-cols-3 gap-2" role="tablist">
+            {(
+              [
+                ["receita", "Receitas"],
+                ["despesa", "Gastos"],
+                ["economia", "Economia"],
+              ] as const
+            ).map(([k, label]) => (
+              <button
+                key={k}
+                role="tab"
+                type="button"
+                aria-selected={tab === k}
+                onClick={() => {
+                  setTab(k);
+                  setPick(null);
+                }}
+                className={`h-11 rounded-full text-[14px] font-medium transition-colors ${tab === k ? "bg-brand font-semibold" : "tile text-muted hover:text-fg"}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="mt-6">
+            {f.loading ? <Skeleton className="h-[238px]" /> : <CashflowBars data={buckets} selected={current?.key ?? ""} onSelect={setPick} />}
+          </div>
+        </section>
 
         {/* Ranking */}
         <Panel
@@ -165,15 +230,6 @@ export default function ResumoPage() {
           <TransactionList items={f.monthTx.slice(0, 6)} />
         )}
       </section>
-    </div>
-  );
-}
-
-function Pill({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-0 rounded-[18px] bg-black/15 px-2.5 py-2.5 sm:px-3">
-      <p className="text-[12px] font-medium opacity-70">{label}</p>
-      <p className="num mt-0.5 whitespace-nowrap text-[13px] font-semibold sm:text-[15px]">{value}</p>
     </div>
   );
 }

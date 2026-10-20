@@ -75,26 +75,23 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto w-full max-w-5xl px-4 pb-36 pt-4 sm:px-6 lg:px-10 lg:pb-16 lg:pt-10">{children}</div>
       </main>
 
-      {/* Barra inferior flutuante (celular e tablet) */}
-      <nav
-        aria-label="Navegação"
-        className="fixed inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-30 px-4 lg:hidden"
-      >
-        <div className="mx-auto flex max-w-md items-center gap-3">
-          <div className="glass flex h-16 flex-1 items-center justify-around rounded-full px-2">
-            {NAV.map((n) => (
-              <TabLink key={n.href} {...n} active={isActive(n.href)} />
-            ))}
-          </div>
-          <button
-            onClick={() => openNew()}
-            aria-label="Novo lançamento"
-            className="bg-brand inline-flex size-16 shrink-0 items-center justify-center rounded-full transition-transform active:scale-95"
-          >
-            <Plus size={26} weight="bold" />
-          </button>
+      {/* Barra inferior flutuante (celular e tablet): a aba atual abre em pílula com o nome */}
+      <nav aria-label="Navegação" className="fixed inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-30 flex justify-center px-4 lg:hidden">
+        <div className="glass flex items-center gap-1 rounded-full p-1.5">
+          {NAV.map((n) => (
+            <TabLink key={n.href} {...n} active={isActive(n.href)} />
+          ))}
         </div>
       </nav>
+      {path !== "/" && (
+        <button
+          onClick={() => openNew()}
+          aria-label="Novo lançamento"
+          className="bg-brand pop fixed bottom-[calc(5.75rem+env(safe-area-inset-bottom))] right-4 z-30 inline-flex size-14 items-center justify-center rounded-full shadow-[0_8px_24px_rgb(0_0_0/0.45)] transition-transform active:scale-95 lg:hidden"
+        >
+          <Plus size={24} weight="bold" />
+        </button>
+      )}
     </div>
   );
 }
@@ -106,9 +103,12 @@ function TabLink({ href, label, icon: Icon, active }: (typeof NAV)[number] & { a
       aria-label={label}
       title={label}
       aria-current={active ? "page" : undefined}
-      className={`relative flex size-12 items-center justify-center rounded-full transition-colors ${active ? "bg-brand" : "text-muted"}`}
+      className={`flex h-10 items-center justify-center rounded-full transition-colors min-[400px]:h-11 ${
+        active ? "bg-brand gap-1.5 px-3.5 text-[14px] font-semibold" : "tile size-10 text-muted hover:text-fg min-[400px]:size-11"
+      }`}
     >
-      <Icon size={24} weight={active ? "fill" : "regular"} />
+      <Icon size={20} weight={active ? "fill" : "regular"} />
+      {active && <span className="whitespace-nowrap">{label}</span>}
     </Link>
   );
 }

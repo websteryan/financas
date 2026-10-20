@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { Bank, Check, CaretLeft, CaretRight, CreditCard, Money, PixLogo, X } from "./icons";
-import { currentYM, monthLabel, shiftYM, type YM } from "@/lib/format";
+import { currentYM, money, monthLabel, shiftYM, type YM } from "@/lib/format";
 import type { AccountType } from "@/lib/types";
 
 /*
@@ -247,4 +247,21 @@ export function Toaster() {
 
 export function Skeleton({ className = "" }: { className?: string }) {
   return <div className={`animate-pulse rounded-[16px] bg-surface-2 ${className}`} />;
+}
+
+/** Valor grande: símbolo e centavos mais discretos, reais em destaque. */
+export function BigMoney({ cents, className = "" }: { cents: number; className?: string }) {
+  const txt = money(Math.abs(cents)); // "R$ 4.685,88"
+  const cut = txt.lastIndexOf(",");
+  const sym = txt.slice(0, txt.search(/\d/));
+  const whole = txt.slice(sym.length, cut);
+  const dec = txt.slice(cut);
+  return (
+    <span className={`num ${className}`}>
+      {cents < 0 && "-"}
+      <span className="font-medium text-muted">{sym}</span>
+      <span className="font-bold">{whole}</span>
+      <span className="font-medium text-muted">{dec}</span>
+    </span>
+  );
 }

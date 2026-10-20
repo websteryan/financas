@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
 import { axisLabel, money } from "@/lib/format";
 
 /* Gráficos em SVG próprio: leves, sem dependências e com as cores do tema. */
@@ -406,6 +406,141 @@ export function Donut({ items, size = 184, centerLabel }: { items: DonutItem[]; 
         <span className="text-[12px] text-muted">{active ? active.label : centerLabel}</span>
         <span className="num mt-0.5 max-w-[110px] text-[16px] font-semibold leading-tight">{money(active ? active.value : total)}</span>
       </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------ Fluxo de caixa (barras altas) */
+
+export interface CashDatum {
+  key: string;
+  label: string;
+  value: number;
+}
+
+/** Barras em pílula sobre trilhos; a barra escolhida ganha degradê, linha tracejada e balão com o valor. */
+export function CashflowBars({
+  data,
+  selected,
+  onSelect,
+  height = 210,
+}: {
+  data: CashDatum[];
+  selected: string;
+  onSelect: (key: string) => void;
+  height?: number;
+}) {
+  const max = niceMax(Math.max(1, ...data.map((d) => d.value)));
+  const ticks = [max, max / 2, 0];
+  return (
+    <div className="flex w-full gap-3" role="group" aria-label="Fluxo de caixa por período">
+      <div className="flex shrink-0 flex-col justify-between pb-7 pt-1 text-[12px] text-muted num" style={{ height: height + 28 }} aria-hidden>
+        {ticks.map((t) => (
+          <span key={t} className="leading-none">
+            {axisLabel(t)}
+          </span>
+        ))}
+      </div>
+      <div className="flex min-w-0 flex-1 items-stretch gap-2 sm:gap-3">
+        {data.map((d, i) => {
+          const on = d.key === selected;
+          const h = d.value > 0 ? Math.max(12, (d.value / max) * 100) : 5;
+          const edge = i === 0 ? "left-0" : i === data.length - 1 ? "right-0" : "left-1/2 -translate-x-1/2";
+          return (
+            <button
+              key={d.key}
+              type="button"
+              aria-pressed={on}
+              aria-label={`${d.label}: ${money(d.value)}`}
+              onClick={() => onSelect(d.key)}
+              className="group relative flex min-w-0 flex-1 flex-col items-center gap-2.5"
+            >
+              <span className="relative flex w-full items-end rounded-full bg-white/[0.045]" style={{ height }}>
+                <span
+                  className={`grow-y relative block w-full rounded-full transition-[height] duration-500 ease-out ${on ? "" : "bg-white/[0.12] group-hover:bg-white/[0.2]"}`}
+                  style={
+                    {
+                      height: `${h}%`,
+                      "--i": i,
+                      background: on ? "linear-gradient(to bottom, var(--accent), rgb(155 114 255 / 0.18))" : undefined,
+                    } as CSSProperties
+                  }
+                >
+                  {on && (
+                    <>
+                      <span className="absolute left-1/2 top-2 size-1.5 -translate-x-1/2 rounded-full bg-white" />
+                      <span className="absolute bottom-2 left-1/2 top-4 -translate-x-1/2 border-l border-dashed border-white/50" />
+                    </>
+                  )}
+                </span>
+                {on && (
+                  <span
+                    className={`pop num pointer-events-none absolute z-10 whitespace-nowrap rounded-full border border-accent/60 bg-sheet px-3 py-1 text-[12px] font-semibold ${edge}`}
+                    style={{ bottom: `calc(${h}% + 8px)` }}
+                  >
+                    {money(d.value)}
+                  </span>
+                )}
+              </span>
+              <span className={`text-[12px] ${on ? "font-semibold text-fg" : "text-muted"}`}>{d.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ----------------------------------------------- Contas em bolhas ligadas */
+
+export interface Bubble {
+  id: string;
+  label: string;
+  value: number;
+}
+
+/** Até três contas como bolhas que se fundem; a de maior movimento fica no centro, destacada. */
+export function AccountBubbles({ items }: { items: Bubble[] }) {
+  const id = useId().replace(/:/g, "");
+  const slots = items.length >= 3 ? [1, 0, 2] : items.length === 2 ? [1, 0] : [0];
+  const pos = [
+    { cx: 62, r: 56 },
+    { cx: 165, r: 63 },
+    { cx: 268, r: 56 },
+  ];
+  const placed = slots.map((src, slot) => ({ item: items[src], ...pos[slot], center: slot === 1 || items.length === 1 }));
+  if (items.length === 1) placed[0] = { item: items[0], cx: 165, r: 63, center: true };
+  return (
+    <div className="relative w-full" style={{ aspectRatio: "330 / 126" }}>
+      <svg viewBox="0 0 330 126" className="absolute inset-0 size-full" aria-hidden>
+        <defs>
+          <filter id={`${id}g`} x="-10%" y="-10%" width="120%" height="120%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b" />
+            <feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -10" />
+          </filter>
+          <radialGradient id={`${id}c`} cx="0.5" cy="0.9" r="0.9">
+            <stop offset="0" stopColor="#d9c8ff" />
+            <stop offset="1" stopColor="#9b72ff" />
+          </radialGradient>
+        </defs>
+        <g filter={`url(#${id}g)`}>
+          {placed.map((p) => (
+            <circle key={p.item.id} cx={p.cx} cy={63} r={p.r} fill={p.center ? `url(#${id}c)` : "#26262c"} />
+          ))}
+        </g>
+      </svg>
+      {placed.map((p) => (
+        <div
+          key={p.item.id}
+          className={`absolute top-1/2 w-[34%] -translate-x-1/2 -translate-y-1/2 ${p.center ? "text-[#0b0816]" : "text-fg"}`}
+          style={{ left: `${(p.cx / 330) * 100}%` }}
+        >
+          <div className="pop flex flex-col items-center text-center">
+            <span className="num max-w-full whitespace-nowrap text-[13px] font-semibold min-[400px]:text-[14px] sm:text-[17px]">{money(p.item.value)}</span>
+            <span className={`max-w-full truncate text-[12px] ${p.center ? "opacity-70" : "text-muted"}`}>{p.item.label}</span>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
