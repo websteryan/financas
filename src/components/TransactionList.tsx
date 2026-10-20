@@ -15,16 +15,20 @@ export function Amount({ tx, className = "" }: { tx: Pick<Transaction, "kind" | 
 }
 
 export function TransactionRow({ tx, anim = "" , index = 0 }: { tx: Transaction; anim?: string; index?: number }) {
-  const { openEdit, accountById, categoryById } = useFinance();
+  const { openEdit, accountById, categoryById, removing } = useFinance();
+  const leaving = removing.has(tx.id);
   const cat = categoryById(tx.category_id);
   const acc = accountById(tx.account_id);
   const color = cat?.color ?? "#8b8b93";
   return (
+    <div className={`grid transition-[grid-template-rows] duration-300 ease-[var(--ease-out)] ${leaving ? "grid-rows-[0fr]" : "grid-rows-[1fr]"}`}>
+    <div className="min-h-0 overflow-hidden">
+    <div className="pb-2.5">
     <button
       type="button"
       onClick={() => openEdit(tx)}
       style={{ "--i": index } as CSSProperties}
-      className={`${anim} tile group flex w-full items-center gap-3.5 rounded-[22px] px-3.5 py-3 text-left transition-[background-color,transform] hover:bg-surface-2 active:scale-[0.99]`}
+      className={`${leaving ? "item-out" : anim} tile group flex w-full items-center gap-3.5 rounded-[22px] px-3.5 py-3 text-left transition-[background-color,transform] hover:bg-surface-3 active:scale-[0.99]`}
     >
       <span
         className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-[15px] font-semibold"
@@ -43,6 +47,9 @@ export function TransactionRow({ tx, anim = "" , index = 0 }: { tx: Transaction;
       </span>
       <Amount tx={tx} className="text-[16px]" />
     </button>
+    </div>
+    </div>
+    </div>
   );
 }
 
@@ -74,7 +81,7 @@ export function TransactionList({ items }: { items: Transaction[] }) {
                 </span>
               )}
             </header>
-            <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col">
               {d.items.map((t) => (
                 <TransactionRow key={t.id} tx={t} anim={initial ? "rise" : fresh.has(t.id) ? "item-in" : ""} index={initial ? Math.min(n++, 8) : 0} />
               ))}

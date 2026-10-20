@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { Urbanist } from "next/font/google";
+import { Geist, Urbanist } from "next/font/google";
 import { Providers } from "@/components/Providers";
 import "./globals.css";
 
 const urbanist = Urbanist({ subsets: ["latin"], variable: "--font-urbanist", display: "swap" });
+const geist = Geist({ subsets: ["latin"], variable: "--font-geist", display: "swap" });
 
 export const metadata: Metadata = {
   title: "Finanças",
@@ -27,7 +28,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${urbanist.variable}`}>
+    <html lang="pt-BR" className={`${urbanist.variable} ${geist.variable}`}>
       <body>
         <Providers>{children}</Providers>
       </body>

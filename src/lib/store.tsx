@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { currentYM, monthEnd, monthStart, shiftYM, type YM } from "./format";
+import { prefersReducedMotion } from "./motion";
 import { repo } from "./repo";
 import type { Account, Category, Investment, Kind, NewInvestment, NewTransaction, Transaction } from "./types";
 
@@ -34,6 +35,8 @@ interface Finance {
   deleteAccount: (id: string) => Promise<void>;
   saveCategory: (c: Omit<Category, "id"> & { id?: string }) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
+  /** Ids em animação de saída (a linha desliza antes de sumir). */
+  removing: Set<string>;
   investments: Investment[];
   /** Erro ao carregar investimentos (ex.: tabela ainda não criada); não afeta o resto do app. */
   investmentsError: string | null;
@@ -50,6 +53,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [windowTx, setWindowTx] = useState<Transaction[]>([]);
+  const [removing, setRemoving] = useState<Set<string>>(new Set());
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [investmentsError, setInvestmentsError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -104,6 +108,21 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     [reload],
   );
 
+  /** Marca as linhas como "saindo", espera a animação e só então apaga. */
+  const animatedRemove = useCallback(
+    async (ids: string[], fn: () => Promise<void>) => {
+      setRemoving(new Set(ids));
+      if (!prefersReducedMotion()) await new Promise((r) => setTimeout(r, 300));
+      try {
+        await fn();
+        await reload();
+      } finally {
+        setRemoving(new Set());
+      }
+    },
+    [reload],
+  );
+
   const value = useMemo<Finance>(() => {
     const mStart = monthStart(month);
     const accMap = new Map(accounts.map((a) => [a.id, a]));
@@ -124,20 +143,25 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       closeSheet: () => setSheet({ open: false }),
       addTransactions: (rows) => run(() => repo.addTransactions(rows)),
       updateTransaction: (id, patch) => run(() => repo.updateTransaction(id, patch)),
-      deleteTransaction: (id) => run(() => repo.deleteTransaction(id)),
-      deleteGroup: (g) => run(() => repo.deleteGroup(g)),
+      deleteTransaction: (id) => animatedRemove([id], () => repo.deleteTransaction(id)),
+      deleteGroup: (g) =>
+        animatedRemove(
+          windowTx.filter((t) => t.group_id === g).map((t) => t.id),
+          () => repo.deleteGroup(g),
+        ),
       saveAccount: (a) => run(() => repo.saveAccount(a)),
       deleteAccount: (id) => run(() => repo.deleteAccount(id)),
       saveCategory: (c) => run(() => repo.saveCategory(c)),
       deleteCategory: (id) => run(() => repo.deleteCategory(id)),
+      removing,
       investments,
       investmentsError,
       saveInvestment: (i) => run(() => repo.saveInvestment(i)),
-      deleteInvestment: (id) => run(() => repo.deleteInvestment(id)),
+      deleteInvestment: (id) => animatedRemove([id], () => repo.deleteInvestment(id)),
       accountById: (id) => accMap.get(id),
       categoryById: (id) => (id ? catMap.get(id) : undefined),
     };
-  }, [month, accounts, categories, windowTx, investments, investmentsError, loading, error, reload, sheet, run, to]);
+  }, [month, accounts, categories, windowTx, removing, animatedRemove, investments, investmentsError, loading, error, reload, sheet, run, to]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

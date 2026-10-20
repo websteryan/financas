@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ButtonHTMLAttributes, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { Bank, Check, CaretLeft, CaretRight, CreditCard, Money, PixLogo, X } from "./icons";
 import { currentYM, money, monthLabel, shiftYM, type YM } from "@/lib/format";
 import type { AccountType } from "@/lib/types";
@@ -14,7 +14,7 @@ type Variant = "primary" | "secondary" | "ghost" | "danger";
 
 const variants: Record<Variant, string> = {
   primary: "bg-brand font-semibold hover:brightness-110",
-  secondary: "tile text-fg hover:bg-surface-2",
+  secondary: "tile text-fg hover:bg-surface-3",
   ghost: "text-muted hover:text-fg hover:bg-surface-2",
   danger: "bg-expense/10 text-expense hover:bg-expense/15",
 };
@@ -42,7 +42,7 @@ export function IconButton({
       aria-label={label}
       title={label}
       {...props}
-      className={`tile inline-flex size-10 shrink-0 items-center justify-center rounded-full text-fg/85 transition-[transform,background-color,color] duration-150 hover:bg-surface-2 hover:text-fg active:scale-95 ${className}`}
+      className={`tile inline-flex size-10 shrink-0 items-center justify-center rounded-full text-fg/85 transition-[transform,background-color,color] duration-150 hover:bg-surface-3 hover:text-fg active:scale-95 ${className}`}
     />
   );
 }
@@ -58,8 +58,14 @@ export function Segmented<T extends string>({
   options: { value: T; label: string }[];
   className?: string;
 }) {
+  const idx = Math.max(0, options.findIndex((o) => o.value === value));
   return (
-    <div role="tablist" className={`flex gap-2 ${className}`}>
+    <div role="tablist" className={`tile relative grid rounded-full p-1 ${className}`} style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
+      <span
+        aria-hidden
+        className="bg-brand absolute inset-y-1 left-1 rounded-full transition-transform duration-[380ms] ease-[var(--ease-out)] motion-reduce:transition-none"
+        style={{ width: `calc((100% - 0.5rem) / ${options.length})`, transform: `translateX(${idx * 100}%)` }}
+      />
       {options.map((o) => (
         <button
           key={o.value}
@@ -67,8 +73,8 @@ export function Segmented<T extends string>({
           type="button"
           aria-selected={value === o.value}
           onClick={() => onChange(o.value)}
-          className={`h-11 flex-1 whitespace-nowrap rounded-full px-4 text-[15px] font-medium transition-all duration-200 ${
-            value === o.value ? "bg-brand font-semibold" : "tile text-muted hover:text-fg"
+          className={`relative z-10 h-11 min-w-0 truncate whitespace-nowrap rounded-full px-3 text-[15px] transition-colors duration-200 ${
+            value === o.value ? "font-semibold text-accent-fg" : "font-medium text-muted hover:text-fg"
           }`}
         >
           {o.label}
@@ -168,9 +174,25 @@ export function Sheet({
   children: ReactNode;
   footer?: ReactNode;
 }) {
+  const panel = useRef<HTMLDivElement>(null);
+  const drag = useRef<{ y: number; t: number; dy: number } | null>(null);
+  const [closing, setClosing] = useState(false);
+
+  // Fecha com saída animada (desliza para baixo no celular, esmaece no computador)
+  const requestClose = useCallback(() => {
+    if (closing) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) return onClose();
+    setClosing(true);
+    window.setTimeout(() => {
+      setClosing(false);
+      onClose();
+    }, 220);
+  }, [closing, onClose]);
+
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && requestClose();
     document.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -178,18 +200,51 @@ export function Sheet({
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [open, onClose]);
+  }, [open, requestClose]);
+
+  function down(e: ReactPointerEvent) {
+    if ((e.target as HTMLElement).closest("button")) return;
+    drag.current = { y: e.clientY, t: performance.now(), dy: 0 };
+    e.currentTarget.setPointerCapture(e.pointerId);
+    if (panel.current) panel.current.style.transition = "none";
+  }
+  function move(e: ReactPointerEvent) {
+    const d = drag.current;
+    if (!d || !panel.current) return;
+    d.dy = Math.max(0, e.clientY - d.y);
+    panel.current.style.transform = `translateY(${d.dy}px)`;
+  }
+  function up() {
+    const d = drag.current;
+    drag.current = null;
+    const el = panel.current;
+    if (!d || !el) return;
+    const v = d.dy / Math.max(1, performance.now() - d.t); // px/ms
+    el.style.transition = "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)";
+    if (d.dy > 120 || v > 0.6) {
+      el.style.transform = "translateY(100%)";
+      window.setTimeout(onClose, 260);
+    } else {
+      el.style.transform = "";
+    }
+  }
 
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-label={title}>
-      <button aria-label="Fechar" className="sheet-backdrop absolute inset-0 bg-black/70 backdrop-blur-[4px]" onClick={onClose} />
-      <div className="sheet-panel relative flex max-h-[92dvh] w-full flex-col rounded-t-[28px] border border-line bg-sheet shadow-[0_-12px_60px_rgb(0_0_0/0.5)] sm:max-w-[460px] sm:rounded-[28px]">
-        <div className="flex items-center justify-between px-5 pb-2 pt-4">
-          <h2 className="text-[17px] font-semibold">{title}</h2>
-          <IconButton label="Fechar" onClick={onClose} className="-mr-2">
-            <X size={18} weight="bold" />
-          </IconButton>
+      <button aria-label="Fechar" className={`${closing ? "sheet-backdrop-out" : "sheet-backdrop"} absolute inset-0 bg-black/70 backdrop-blur-[4px]`} onClick={requestClose} />
+      <div
+        ref={panel}
+        className={`${closing ? "sheet-panel-out" : "sheet-panel"} relative flex max-h-[92dvh] w-full flex-col rounded-t-[28px] border border-line bg-sheet shadow-[0_-12px_60px_rgb(0_0_0/0.5)] sm:max-w-[460px] sm:rounded-[28px]`}
+      >
+        <div className="touch-none sm:touch-auto" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
+          <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-white/20 sm:hidden" />
+          <div className="flex items-center justify-between px-5 pb-2 pt-3">
+            <h2 className="text-[17px] font-semibold">{title}</h2>
+            <IconButton label="Fechar" onClick={requestClose} className="-mr-2">
+              <X size={18} weight="bold" />
+            </IconButton>
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto px-5 pb-4">{children}</div>
         {footer && <div className="border-t border-line px-5 pb-safe pt-3 sm:pb-0"><div className="pb-4">{footer}</div></div>}
@@ -208,19 +263,24 @@ export function Empty({ title, text, action }: { title: string; text: string; ac
   );
 }
 
-/** Aviso rápido no rodapé. Dispare com `showToast("texto")`. */
-export function showToast(message: string) {
-  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("app-toast", { detail: message }));
+/** Aviso rápido no rodapé. `showToast("texto")` ou com ação (ex.: Desfazer). */
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+export function showToast(message: string, action?: ToastAction) {
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("app-toast", { detail: { message, action } }));
 }
 
 export function Toaster() {
-  const [msg, setMsg] = useState<{ id: number; text: string } | null>(null);
+  const [msg, setMsg] = useState<{ id: number; text: string; action?: ToastAction } | null>(null);
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
     const on = (e: Event) => {
-      setMsg({ id: Date.now(), text: String((e as CustomEvent).detail) });
+      const d = (e as CustomEvent).detail as { message: string; action?: ToastAction };
+      setMsg({ id: Date.now(), text: d.message, action: d.action });
       clearTimeout(timer);
-      timer = setTimeout(() => setMsg(null), 2400);
+      timer = setTimeout(() => setMsg(null), d.action ? 6000 : 2400);
     };
     window.addEventListener("app-toast", on);
     return () => {
@@ -234,19 +294,31 @@ export function Toaster() {
       <p
         key={msg.id}
         role="status"
-        className="toast glass flex items-center gap-2.5 rounded-full py-2.5 pl-2.5 pr-5 text-sm font-medium text-fg shadow-[0_8px_30px_rgb(0_0_0/0.5)]"
+        className="toast glass pointer-events-auto flex items-center gap-2.5 rounded-full py-2.5 pl-2.5 pr-5 text-sm font-medium text-fg shadow-[0_8px_30px_rgb(0_0_0/0.5)]"
       >
         <span className="pop bg-brand inline-flex size-6 items-center justify-center rounded-full">
           <Check size={14} weight="bold" />
         </span>
         {msg.text}
+        {msg.action && (
+          <button
+            type="button"
+            className="-mr-2 ml-1 rounded-full px-3 py-1 font-semibold text-accent-text hover:bg-white/10"
+            onClick={() => {
+              msg.action?.onClick();
+              setMsg(null);
+            }}
+          >
+            {msg.action.label}
+          </button>
+        )}
       </p>
     </div>
   );
 }
 
 export function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse rounded-[16px] bg-surface-2 ${className}`} />;
+  return <div className={`skeleton rounded-[16px] ${className}`} />;
 }
 
 /** Valor grande: símbolo e centavos mais discretos, reais em destaque. */
@@ -257,7 +329,7 @@ export function BigMoney({ cents, className = "" }: { cents: number; className?:
   const whole = txt.slice(sym.length, cut);
   const dec = txt.slice(cut);
   return (
-    <span className={`num ${className}`}>
+    <span className={`num font-display ${className}`}>
       {cents < 0 && "-"}
       <span className="font-medium text-muted">{sym}</span>
       <span className="font-bold">{whole}</span>

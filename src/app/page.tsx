@@ -7,7 +7,7 @@ import { AccountBubbles, CashflowBars, Donut, RankBars, type CashDatum } from "@
 import { DemoBanner } from "@/components/DemoBanner";
 import { Panel } from "@/components/PageHeader";
 import { TransactionList } from "@/components/TransactionList";
-import { BigMoney, Button, Empty, MonthPicker, Skeleton } from "@/components/ui";
+import { BigMoney, Button, Empty, MonthPicker, Segmented, Skeleton } from "@/components/ui";
 import { Logo } from "@/components/Logo";
 import { byCategory, monthlySeries, statBuckets, type StatMode } from "@/lib/derive";
 import { money } from "@/lib/format";
@@ -157,29 +157,19 @@ export default function ResumoPage() {
             </label>
           </div>
           <p className="mt-3 text-[34px] leading-none tracking-tight">{f.loading ? <Skeleton className="h-9 w-48" /> : <BigMoney cents={flowTotal} />}</p>
-          <div className="mt-4 grid grid-cols-3 gap-2" role="tablist">
-            {(
-              [
-                ["receita", "Receitas"],
-                ["despesa", "Gastos"],
-                ["economia", "Economia"],
-              ] as const
-            ).map(([k, label]) => (
-              <button
-                key={k}
-                role="tab"
-                type="button"
-                aria-selected={tab === k}
-                onClick={() => {
-                  setTab(k);
-                  setPick(null);
-                }}
-                className={`h-11 rounded-full text-[14px] font-medium transition-colors ${tab === k ? "bg-brand font-semibold" : "tile text-muted hover:text-fg"}`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+          <Segmented
+            className="mt-4"
+            value={tab}
+            onChange={(k) => {
+              setTab(k);
+              setPick(null);
+            }}
+            options={[
+              { value: "receita", label: "Receitas" },
+              { value: "despesa", label: "Gastos" },
+              { value: "economia", label: "Economia" },
+            ]}
+          />
           <div className="mt-6">
             {f.loading ? <Skeleton className="h-[238px]" /> : <CashflowBars data={buckets} selected={current?.key ?? ""} onSelect={setPick} />}
           </div>

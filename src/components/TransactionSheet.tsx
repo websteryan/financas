@@ -16,7 +16,7 @@ function yesterdayISO() {
 }
 
 export function TransactionSheet() {
-  const { sheet, closeSheet, accounts, categories, addTransactions, updateTransaction, deleteTransaction, deleteGroup } =
+  const { sheet, closeSheet, accounts, categories, windowTx, addTransactions, updateTransaction, deleteTransaction, deleteGroup } =
     useFinance();
   const editing = sheet.open ? sheet.tx : null;
 
@@ -126,15 +126,18 @@ export function TransactionSheet() {
 
   async function remove(all: boolean) {
     if (!editing) return;
-    setSaving(true);
+    const gone = all && editing.group_id ? windowTx.filter((t) => t.group_id === editing.group_id) : [editing];
+    const rows: NewTransaction[] = gone.map(({ id: _id, created_at: _c, ...r }) => r);
+    closeSheet();
     try {
       if (all && editing.group_id) await deleteGroup(editing.group_id);
       else await deleteTransaction(editing.id);
-      showToast(all ? "Parcelas excluídas" : "Lançamento excluído");
-      closeSheet();
+      showToast(all ? "Parcelas excluídas" : "Lançamento excluído", {
+        label: "Desfazer",
+        onClick: () => void addTransactions(rows),
+      });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Não foi possível excluir.");
-      setSaving(false);
+      showToast(e instanceof Error ? e.message : "Não foi possível excluir.");
     }
   }
 
@@ -219,7 +222,7 @@ export function TransactionSheet() {
               const el = e.currentTarget;
               requestAnimationFrame(() => el.setSelectionRange(el.value.length, el.value.length));
             }}
-            className={`num w-full bg-transparent text-center text-[44px] font-semibold leading-tight outline-none focus-visible:outline-none ${
+            className={`num font-display w-full bg-transparent text-center text-[44px] font-semibold leading-tight outline-none focus-visible:outline-none ${
               kind === "despesa" ? "text-fg" : "text-income"
             }`}
           />

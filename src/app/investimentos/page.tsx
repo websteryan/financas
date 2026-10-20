@@ -55,7 +55,7 @@ export default function InvestimentosPage() {
             {f.loading ? (
               <Skeleton className="mt-2 h-12 w-56 bg-black/15" />
             ) : (
-              <p className="num mt-1 text-[44px] font-semibold leading-none tracking-tight sm:text-[56px]">{money(shown)}</p>
+              <p className="num font-display mt-1 text-[44px] font-semibold leading-none tracking-tight sm:text-[56px]">{money(shown)}</p>
             )}
             <p className="mt-3 inline-flex rounded-full bg-black/15 px-3 py-1 text-[13px] font-medium">
               {list.length} {list.length === 1 ? "aplicação" : "aplicações"} em {byType.length} {byType.length === 1 ? "tipo" : "tipos"}
@@ -129,7 +129,7 @@ function InvestmentRow({ inv, index, onClick }: { inv: Investment; index: number
       type="button"
       onClick={onClick}
       style={{ "--i": index } as CSSProperties}
-      className="rise tile flex w-full items-center gap-3.5 rounded-[22px] px-3.5 py-3 text-left transition-[background-color,transform] hover:bg-surface-2 active:scale-[0.99]"
+      className="rise tile flex w-full items-center gap-3.5 rounded-[22px] px-3.5 py-3 text-left transition-[background-color,transform] hover:bg-surface-3 active:scale-[0.99]"
     >
       <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-[15px] font-semibold" style={{ background: `${color}2b`, color }} aria-hidden>
         {inv.name.charAt(0).toUpperCase()}
@@ -177,14 +177,13 @@ function InvestmentSheet({ draft, onClose }: { draft: Draft | null; onClose: () 
   }
   async function remove() {
     if (!form?.id) return;
-    setBusy(true);
+    const back = { name: form.name, type: form.type, institution: form.institution, amount_cents: form.cents, date: form.date };
+    onClose();
     try {
       await f.deleteInvestment(form.id);
-      showToast("Investimento excluído");
-      onClose();
+      showToast("Investimento excluído", { label: "Desfazer", onClick: () => void f.saveInvestment(back) });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Não foi possível excluir.");
-      setBusy(false);
+      showToast(e instanceof Error ? e.message : "Não foi possível excluir.");
     }
   }
 
@@ -241,7 +240,7 @@ function InvestmentSheet({ draft, onClose }: { draft: Draft | null; onClose: () 
             autoComplete="off"
             value={money(form.cents)}
             onChange={(e) => setForm({ ...form, cents: Number(e.target.value.replace(/\D/g, "").slice(0, 11) || "0") })}
-            className="num w-full bg-transparent text-center text-[44px] font-semibold leading-tight outline-none"
+            className="num font-display w-full bg-transparent text-center text-[44px] font-semibold leading-tight outline-none"
           />
         </div>
         <Field label="Nome" htmlFor="inv-nome">
