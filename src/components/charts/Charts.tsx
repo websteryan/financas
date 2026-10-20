@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
 import { axisLabel, money } from "@/lib/format";
 
 /* Gráficos em SVG próprio: leves, sem dependências e com as cores do tema. */
@@ -39,7 +39,7 @@ function Tooltip({ x, y, width, children }: { x: number; y: number; width: numbe
   const left = Math.max(0, Math.min(width - w, x - w / 2));
   return (
     <div
-      className="pointer-events-none absolute z-10 rounded-[16px] border border-line bg-sheet px-3.5 py-2.5 text-[13px] shadow-[0_12px_32px_hsl(var(--shadow)/0.6)]"
+      className="pointer-events-none absolute z-10 rounded-[16px] border border-line bg-sheet px-3.5 py-2.5 text-[13px] shadow-[0_12px_32px_rgb(0_0_0/0.5)]"
       style={{ left, top: Math.max(0, y), width: w }}
     >
       {children}
@@ -109,8 +109,8 @@ export function MonthlyBars({ data, height = 200 }: { data: MonthDatum[]; height
                   rx={14}
                   style={{ fill: d.current ? "rgb(255 255 255 / 0.07)" : "rgb(255 255 255 / 0.035)" }}
                 />
-                <path d={topRoundedBar(cx - barW - 1, y(d.income), barW, plotH + padT - y(d.income))} style={{ fill: "var(--chart-income)" }} />
-                <path d={topRoundedBar(cx + 1, y(d.expense), barW, plotH + padT - y(d.expense))} style={{ fill: "var(--chart-expense)" }} />
+                <path className="grow-y" style={{ fill: "var(--chart-income)", "--i": i } as CSSProperties} d={topRoundedBar(cx - barW - 1, y(d.income), barW, plotH + padT - y(d.income))} />
+                <path className="grow-y" style={{ fill: "var(--chart-expense)", "--i": i } as CSSProperties} d={topRoundedBar(cx + 1, y(d.expense), barW, plotH + padT - y(d.expense))} />
                 <text
                   x={cx}
                   y={height - 6}
@@ -349,6 +349,63 @@ export function StatBars({
           </button>
         );
       })}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- Rosca */
+
+export interface DonutItem {
+  id: string;
+  label: string;
+  value: number;
+  color: string;
+}
+
+/** Rosca de composição. O total fica no centro; passar o dedo/mouse numa fatia mostra o valor dela. */
+export function Donut({ items, size = 184, centerLabel }: { items: DonutItem[]; size?: number; centerLabel: string }) {
+  const [hover, setHover] = useState<string | null>(null);
+  const total = items.reduce((a, b) => a + b.value, 0);
+  const r = 15.9155; // circunferência = 100, assim os valores viram porcentagem direta
+  const gap = items.length > 1 ? 1.2 : 0;
+  let acc = 0;
+  const active = items.find((i) => i.id === hover);
+
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <svg viewBox="0 0 42 42" width={size} height={size} role="img" aria-label="Gastos por categoria" className="-rotate-90">
+        <circle cx="21" cy="21" r={r} fill="none" style={{ stroke: "var(--surface-2)" }} strokeWidth={5} />
+        {total > 0 &&
+          items.map((it, i) => {
+            const pct = (it.value / total) * 100;
+            const seg = Math.max(0, pct - gap);
+            const start = acc;
+            acc += pct;
+            return (
+              <circle
+                key={it.id}
+                className="donut-seg cursor-pointer"
+                cx="21"
+                cy="21"
+                r={r}
+                fill="none"
+                stroke={it.color}
+                strokeWidth={hover === it.id ? 6 : 5}
+                strokeDasharray={`${seg} ${100 - seg}`}
+                strokeDashoffset={-start}
+                strokeLinecap="butt"
+                style={{ "--i": i, opacity: hover && hover !== it.id ? 0.35 : 1, transition: "opacity 150ms, stroke-width 150ms" } as CSSProperties}
+                onPointerEnter={() => setHover(it.id)}
+                onPointerLeave={() => setHover(null)}
+                onPointerDown={() => setHover(it.id)}
+              />
+            );
+          })}
+      </svg>
+      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+        <span className="text-[12px] text-muted">{active ? active.label : centerLabel}</span>
+        <span className="num mt-0.5 max-w-[110px] text-[16px] font-semibold leading-tight">{money(active ? active.value : total)}</span>
+      </div>
     </div>
   );
 }

@@ -194,6 +194,7 @@ body::before {
     animation: pop 0.45s var(--ease-spring) both;
   }
   .grow-y {
+    transform-box: fill-box;
     transform-origin: bottom;
     animation: grow-y 0.7s var(--ease-out) both;
     animation-delay: calc(var(--i, 0) * 45ms + 120ms);
@@ -233,5 +234,18 @@ body::before {
   from {
     opacity: 0;
     transform: translateY(-10px) scale(0.97);
+  }
+}
+
+/* Rosca: cada fatia se desenha em sequência */
+@media (prefers-reduced-motion: no-preference) {
+  .donut-seg {
+    animation: donut-seg 0.9s var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 90ms + 100ms);
+  }
+}
+@keyframes donut-seg {
+  from {
+    stroke-dasharray: 0 100;
   }
 }
