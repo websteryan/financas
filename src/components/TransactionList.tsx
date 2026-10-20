@@ -1,6 +1,8 @@
 "use client";
 
-import { useRef, type CSSProperties } from "react";
+import { useRef, type CSSProperties, type PointerEvent as RPointerEvent } from "react";
+import { PencilSimple, Trash } from "./icons";
+import { showToast } from "./ui";
 import { dayLabel, money } from "@/lib/format";
 import { useFinance } from "@/lib/store";
 import type { Transaction } from "@/lib/types";
@@ -15,7 +17,46 @@ export function Amount({ tx, className = "" }: { tx: Pick<Transaction, "kind" | 
 }
 
 export function TransactionRow({ tx, anim = "" , index = 0 }: { tx: Transaction; anim?: string; index?: number }) {
-  const { openEdit, accountById, categoryById, removing } = useFinance();
+  const { openEdit, accountById, categoryById, removing, deleteTransaction, addTransactions } = useFinance();
+  const btn = useRef<HTMLButtonElement>(null);
+  const bg = useRef<HTMLDivElement>(null);
+  const swipe = useRef<{ x: number; y: number; dx: number; lock: boolean | null } | null>(null);
+  const moved = useRef(false);
+
+  function onDown(e: RPointerEvent) {
+    if (e.pointerType === "mouse") return;
+    swipe.current = { x: e.clientX, y: e.clientY, dx: 0, lock: null };
+    moved.current = false;
+  }
+  function onMove(e: RPointerEvent) {
+    const sw = swipe.current;
+    if (!sw || !btn.current) return;
+    const dx = e.clientX - sw.x;
+    const dy = e.clientY - sw.y;
+    if (sw.lock === null && Math.abs(dx) + Math.abs(dy) > 8) sw.lock = Math.abs(dx) > Math.abs(dy) * 1.4;
+    if (!sw.lock) return;
+    moved.current = true;
+    sw.dx = Math.max(-140, Math.min(140, dx));
+    btn.current.style.transition = "none";
+    btn.current.style.transform = `translateX(${sw.dx}px)`;
+    if (bg.current) bg.current.dataset.side = sw.dx < 0 ? "del" : "edit";
+    if (bg.current) bg.current.style.opacity = String(Math.min(1, Math.abs(sw.dx) / 60));
+  }
+  function onUp() {
+    const sw = swipe.current;
+    swipe.current = null;
+    if (!sw || !btn.current) return;
+    btn.current.style.transition = "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)";
+    btn.current.style.transform = "";
+    if (bg.current) bg.current.style.opacity = "0";
+    if (sw.dx <= -96) {
+      const { id: _i, created_at: _c, ...row } = tx;
+      void deleteTransaction(tx.id).then(() =>
+        showToast("Lançamento excluído", { label: "Desfazer", onClick: () => void addTransactions([row]) }),
+      );
+    } else if (sw.dx >= 96) openEdit(tx);
+    window.setTimeout(() => (moved.current = false), 50);
+  }
   const leaving = removing.has(tx.id);
   const cat = categoryById(tx.category_id);
   const acc = accountById(tx.account_id);
@@ -24,11 +65,26 @@ export function TransactionRow({ tx, anim = "" , index = 0 }: { tx: Transaction;
     <div className={`grid transition-[grid-template-rows] duration-300 ease-[var(--ease-out)] ${leaving ? "grid-rows-[0fr]" : "grid-rows-[1fr]"}`}>
     <div className="min-h-0 overflow-hidden">
     <div className="pb-2.5">
+    <div className="relative">
+    <div
+      ref={bg}
+      aria-hidden
+      style={{ opacity: 0 }}
+      className="group/bg pointer-events-none absolute inset-0 flex items-center justify-between rounded-[22px] bg-accent-soft px-6 text-accent-text data-[side=del]:bg-expense/15 data-[side=del]:text-expense lg:hidden"
+    >
+      <PencilSimple size={20} weight="bold" className="opacity-0 group-data-[side=edit]/bg:opacity-100" />
+      <Trash size={20} weight="bold" className="opacity-0 group-data-[side=del]/bg:opacity-100" />
+    </div>
     <button
+      ref={btn}
       type="button"
-      onClick={() => openEdit(tx)}
+      onPointerDown={onDown}
+      onPointerMove={onMove}
+      onPointerUp={onUp}
+      onPointerCancel={onUp}
+      onClick={() => !moved.current && openEdit(tx)}
       style={{ "--i": index } as CSSProperties}
-      className={`${leaving ? "item-out" : anim} tile group flex w-full items-center gap-3.5 rounded-[22px] px-3.5 py-3 text-left transition-[background-color,transform] hover:bg-surface-3 active:scale-[0.99]`}
+      className={`${leaving ? "item-out" : anim} tile group relative flex w-full touch-pan-y items-center gap-3.5 rounded-[22px] px-3.5 py-3 text-left transition-[background-color,transform] hover:bg-surface-3 active:scale-[0.99]`}
     >
       <span
         className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-[15px] font-semibold"
@@ -47,6 +103,7 @@ export function TransactionRow({ tx, anim = "" , index = 0 }: { tx: Transaction;
       </span>
       <Amount tx={tx} className="text-[16px]" />
     </button>
+    </div>
     </div>
     </div>
     </div>

@@ -79,6 +79,20 @@ drop policy if exists "own investments" on public.investments;
 create policy "own investments" on public.investments
   for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 
+-- Orçamento mensal por categoria de gasto (valor em centavos)
+create table if not exists public.budgets (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  category_id uuid not null references public.categories(id) on delete cascade,
+  limit_cents bigint not null check (limit_cents > 0),
+  created_at timestamptz not null default now(),
+  unique (user_id, category_id)
+);
+alter table public.budgets enable row level security;
+drop policy if exists "own budgets" on public.budgets;
+create policy "own budgets" on public.budgets
+  for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+
 -- Ao criar uma conta de usuário, já cria contas e categorias padrão (pode editar depois)
 create or replace function public.handle_new_user()
 returns trigger

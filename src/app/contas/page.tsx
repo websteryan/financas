@@ -282,17 +282,24 @@ function CategorySheet({ draft, onClose }: { draft: CategoryDraft | null; onClos
   const f = useFinance();
   const [form, setForm] = useState<CategoryDraft | null>(draft);
   const [busy, setBusy] = useState(false);
+  const [limit, setLimit] = useState(0);
   const [prev, setPrev] = useState(draft);
   if (draft !== prev) {
     setPrev(draft);
     setForm(draft);
+    setLimit(f.budgets.find((b) => b.category_id === draft?.id)?.limit_cents ?? 0);
   }
+  const canBudget = Boolean(form?.id) && form?.kind === "despesa" && !f.budgetsError;
   if (!form) return null;
 
   async function save() {
     if (!form || !form.name.trim()) return;
     setBusy(true);
     await f.saveCategory({ ...form, name: form.name.trim() });
+    if (canBudget && form.id) {
+      if (limit > 0) await f.saveBudget({ category_id: form.id, limit_cents: limit });
+      else if (f.budgets.some((b) => b.category_id === form.id)) await f.deleteBudget(form.id);
+    }
     setBusy(false);
     onClose();
   }
@@ -351,6 +358,18 @@ function CategorySheet({ draft, onClose }: { draft: CategoryDraft | null; onClos
         <Field label="Cor">
           <ColorPicker value={form.color} onChange={(color) => setForm({ ...form, color })} />
         </Field>
+        {canBudget && (
+          <Field label="Limite mensal (opcional)" htmlFor="cat-limite" hint="Mostra no Resumo quanto do limite já foi usado. Deixe zerado para não usar.">
+            <input
+              id="cat-limite"
+              inputMode="numeric"
+              autoComplete="off"
+              className={`${inputClass} num`}
+              value={money(limit)}
+              onChange={(e) => setLimit(Number(e.target.value.replace(/\D/g, "").slice(0, 10) || "0"))}
+            />
+          </Field>
+        )}
         <button type="submit" hidden />
       </form>
     </Sheet>

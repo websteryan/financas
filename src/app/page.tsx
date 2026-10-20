@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowDownLeft, ArrowRight, ArrowUpRight, CaretDown } from "@/components/icons";
+import { ArrowDownLeft, ArrowRight, ArrowUpRight, CaretDown, X } from "@/components/icons";
 import { AccountBubbles, CashflowBars, Donut, RankBars, type CashDatum } from "@/components/charts/Charts";
 import { DemoBanner } from "@/components/DemoBanner";
 import { Panel } from "@/components/PageHeader";
@@ -21,9 +21,12 @@ function greeting() {
 
 export default function ResumoPage() {
   const f = useFinance();
-  const t = totals(f.monthTx);
-  const cats = byCategory(f.monthTx, f.categories, "despesa").sort((a, b) => b.value - a.value);
-  const series = monthlySeries(f.windowTx, f.month);
+  const [accFilter, setAccFilter] = useState<string | null>(null);
+  const mtx = accFilter ? f.monthTx.filter((x) => x.account_id === accFilter) : f.monthTx;
+  const wtx = accFilter ? f.windowTx.filter((x) => x.account_id === accFilter) : f.windowTx;
+  const t = totals(mtx);
+  const cats = byCategory(mtx, f.categories, "despesa").sort((a, b) => b.value - a.value);
+  const series = monthlySeries(wtx, f.month);
   const prev = series[series.length - 2];
   const delta = prev && prev.expense > 0 ? Math.round(((t.expense - prev.expense) / prev.expense) * 100) : null;
 
@@ -44,14 +47,22 @@ export default function ResumoPage() {
 
   const buckets: CashDatum[] = (() => {
     if (tab === "economia") {
-      const inc = statBuckets(mode, "receita", f.monthTx, f.windowTx, f.month);
-      const exp = statBuckets(mode, "despesa", f.monthTx, f.windowTx, f.month);
+      const inc = statBuckets(mode, "receita", mtx, wtx, f.month);
+      const exp = statBuckets(mode, "despesa", mtx, wtx, f.month);
       return inc.map((b, i) => ({ key: b.key, label: b.label, value: Math.max(0, b.value - (exp[i]?.value ?? 0)) }));
     }
-    return statBuckets(mode, tab, f.monthTx, f.windowTx, f.month).map((b) => ({ key: b.key, label: b.label, value: b.value }));
+    return statBuckets(mode, tab, mtx, wtx, f.month).map((b) => ({ key: b.key, label: b.label, value: b.value }));
   })();
   const flowTotal = buckets.reduce((s, b) => s + b.value, 0);
   const current = buckets.find((b) => b.key === pick) ?? [...buckets].reverse().find((b) => b.value > 0) ?? buckets[buckets.length - 1];
+
+  const budgetRows = f.budgets
+    .map((b) => {
+      const c = f.categoryById(b.category_id);
+      const spent = mtx.filter((x) => x.kind === "despesa" && x.category_id === b.category_id).reduce((n, x) => n + x.amount_cents, 0);
+      return { id: b.id, name: c?.name ?? "Categoria", color: c?.color ?? "#8b8b93", limit: b.limit_cents, spent, pct: Math.round((spent / b.limit_cents) * 100) };
+    })
+    .sort((a, b) => b.pct - a.pct);
 
   const donutItems = cats.length > 5 ? [...cats.slice(0, 4), { id: "outras", label: "Demais", color: "#6b6b78", value: cats.slice(4).reduce((a, c) => a + c.value, 0) }] : cats;
 
@@ -91,8 +102,18 @@ export default function ResumoPage() {
             </p>
           )}
 
+          {accFilter && (
+            <button
+              type="button"
+              onClick={() => setAccFilter(null)}
+              className="pop tile mt-3 inline-flex h-8 items-center gap-1.5 rounded-full pl-3 pr-2.5 text-[13px] font-medium"
+            >
+              Só {f.accountById(accFilter)?.name ?? "conta"}
+              <X size={12} weight="bold" className="text-muted" />
+            </button>
+          )}
           <div className="mt-5">
-            {f.loading ? <Skeleton className="h-[120px] rounded-[40px]" /> : bubbles.length > 0 ? <AccountBubbles items={bubbles} /> : null}
+            {f.loading ? <Skeleton className="h-[120px] rounded-[40px]" /> : bubbles.length > 0 ? <AccountBubbles items={bubbles} selected={accFilter} onSelect={setAccFilter} /> : null}
           </div>
 
           <div className="mt-5 grid grid-cols-2 gap-2.5">
@@ -189,10 +210,36 @@ export default function ResumoPage() {
         </Panel>
       </div>
 
+      {!f.loading && budgetRows.length > 0 && (
+        <Panel title="Orçamento do mês" className="rise mt-4 lg:mt-5" action={<Link href="/contas" className="text-[14px] font-medium text-accent-text">Editar</Link>}>
+          <ul className="grid grid-cols-1 gap-x-8 gap-y-5 lg:grid-cols-2">
+            {budgetRows.map((r) => (
+              <li key={r.id}>
+                <div className="mb-2 flex items-baseline justify-between gap-3 text-[14px]">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className="size-2.5 shrink-0 rounded-full" style={{ background: r.color }} />
+                    <span className="truncate font-medium">{r.name}</span>
+                  </span>
+                  <span className={`num shrink-0 ${r.pct >= 100 ? "text-expense" : "text-muted"}`}>
+                    {money(r.spent)} de {money(r.limit)}
+                  </span>
+                </div>
+                <div className="h-2.5 overflow-hidden rounded-full bg-white/[0.07]" role="progressbar" aria-valuenow={Math.min(100, r.pct)} aria-valuemin={0} aria-valuemax={100} aria-label={`${r.name}: ${r.pct}% do limite`}>
+                  <div
+                    className="grow-x h-full rounded-full"
+                    style={{ width: `${Math.min(100, r.pct)}%`, background: r.pct >= 100 ? "var(--expense)" : r.pct >= 80 ? "#f5b84a" : "var(--accent)" }}
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      )}
+
       <section className="mt-8">
         <div className="mb-4 flex items-center justify-between px-1">
           <h2 className="text-[19px] font-semibold">Últimos lançamentos</h2>
-          {f.monthTx.length > 0 && (
+          {mtx.length > 0 && (
             <Link href="/lancamentos" className="inline-flex items-center gap-1 text-[14px] font-medium text-accent-text">
               Ver todos <ArrowRight size={14} weight="bold" />
             </Link>
@@ -204,7 +251,7 @@ export default function ResumoPage() {
               <Skeleton key={i} className="h-[68px] rounded-[22px]" />
             ))}
           </div>
-        ) : f.monthTx.length === 0 ? (
+        ) : mtx.length === 0 ? (
           <div className="card">
             <Empty
               title="Nada lançado neste mês"
@@ -217,7 +264,7 @@ export default function ResumoPage() {
             />
           </div>
         ) : (
-          <TransactionList items={f.monthTx.slice(0, 6)} />
+          <TransactionList items={mtx.slice(0, 6)} />
         )}
       </section>
     </div>

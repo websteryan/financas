@@ -500,7 +500,7 @@ export interface Bubble {
 }
 
 /** Até três contas como bolhas que se fundem; a de maior movimento fica no centro, destacada. */
-export function AccountBubbles({ items }: { items: Bubble[] }) {
+export function AccountBubbles({ items, selected, onSelect }: { items: Bubble[]; selected?: string | null; onSelect?: (id: string | null) => void }) {
   const id = useId().replace(/:/g, "");
   const slots = items.length >= 3 ? [1, 0, 2] : items.length === 2 ? [1, 0] : [0];
   const pos = [
@@ -525,22 +525,33 @@ export function AccountBubbles({ items }: { items: Bubble[] }) {
         </defs>
         <g filter={`url(#${id}g)`}>
           {placed.map((p) => (
-            <circle key={p.item.id} cx={p.cx} cy={63} r={p.r} fill={p.center ? `url(#${id}c)` : "#26262c"} />
+            <circle key={p.item.id} cx={p.cx} cy={63} r={p.r} fill={p.center ? `url(#${id}c)` : "#26262c"} style={{ opacity: selected && selected !== p.item.id ? 0.4 : 1, transition: "opacity 250ms" }} />
           ))}
         </g>
+        {selected &&
+          placed
+            .filter((p) => p.item.id === selected)
+            .map((p) => <circle key="ring" cx={p.cx} cy={63} r={p.r - 2} fill="none" stroke="#fff" strokeOpacity={0.85} strokeWidth={2} />)}
       </svg>
-      {placed.map((p) => (
-        <div
-          key={p.item.id}
-          className={`absolute top-1/2 w-[34%] -translate-x-1/2 -translate-y-1/2 ${p.center ? "text-[#0b0816]" : "text-fg"}`}
-          style={{ left: `${(p.cx / 330) * 100}%` }}
-        >
-          <div className="pop flex flex-col items-center text-center">
-            <span className="num max-w-full whitespace-nowrap text-[13px] font-semibold min-[400px]:text-[14px] sm:text-[17px]">{money(p.item.value)}</span>
-            <span className={`max-w-full truncate text-[12px] ${p.center ? "opacity-70" : "text-muted"}`}>{p.item.label}</span>
-          </div>
-        </div>
-      ))}
+      {placed.map((p) => {
+        const on = selected === p.item.id;
+        return (
+          <button
+            key={p.item.id}
+            type="button"
+            aria-pressed={on}
+            aria-label={`${p.item.label}: ${money(p.item.value)}. Toque para ${on ? "ver todas as contas" : "filtrar por esta conta"}`}
+            onClick={() => onSelect?.(on ? null : p.item.id)}
+            className={`absolute top-1/2 h-[86%] w-[32%] -translate-x-1/2 -translate-y-1/2 rounded-full transition-transform duration-200 active:scale-95 ${p.center ? "text-[#0b0816]" : "text-fg"}`}
+            style={{ left: `${(p.cx / 330) * 100}%` }}
+          >
+            <span className="pop flex flex-col items-center text-center">
+              <span className="num max-w-full whitespace-nowrap text-[13px] font-semibold min-[400px]:text-[14px] sm:text-[17px]">{money(p.item.value)}</span>
+              <span className={`max-w-full truncate text-[12px] ${p.center ? "opacity-70" : "text-muted"}`}>{p.item.label}</span>
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }

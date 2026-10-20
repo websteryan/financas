@@ -31,6 +31,12 @@ export interface Transaction {
 
 export type NewTransaction = Omit<Transaction, "id" | "created_at">;
 
+export interface Budget {
+  id: string;
+  category_id: string;
+  limit_cents: number;
+}
+
 export type InvestmentType = "renda_fixa" | "acoes" | "fiis" | "cripto" | "fundos" | "outros";
 
 export interface Investment {

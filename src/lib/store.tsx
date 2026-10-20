@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { currentYM, monthEnd, monthStart, shiftYM, type YM } from "./format";
 import { prefersReducedMotion } from "./motion";
 import { repo } from "./repo";
-import type { Account, Category, Investment, Kind, NewInvestment, NewTransaction, Transaction } from "./types";
+import type { Account, Budget, Category, Investment, Kind, NewInvestment, NewTransaction, Transaction } from "./types";
 
 /** Quantos meses (incluindo o selecionado) ficam carregados para os gráficos de evolução. */
 export const WINDOW_MONTHS = 6;
@@ -37,6 +37,11 @@ interface Finance {
   deleteCategory: (id: string) => Promise<void>;
   /** Ids em animação de saída (a linha desliza antes de sumir). */
   removing: Set<string>;
+  budgets: Budget[];
+  /** Orçamentos indisponíveis (ex.: tabela ainda não criada); o app segue sem eles. */
+  budgetsError: string | null;
+  saveBudget: (b: { category_id: string; limit_cents: number }) => Promise<void>;
+  deleteBudget: (categoryId: string) => Promise<void>;
   investments: Investment[];
   /** Erro ao carregar investimentos (ex.: tabela ainda não criada); não afeta o resto do app. */
   investmentsError: string | null;
@@ -54,6 +59,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [windowTx, setWindowTx] = useState<Transaction[]>([]);
   const [removing, setRemoving] = useState<Set<string>>(new Set());
+  const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [budgetsError, setBudgetsError] = useState<string | null>(null);
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [investmentsError, setInvestmentsError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -74,6 +81,12 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       setCategories(c);
       setWindowTx(t);
       setError(null);
+      try {
+        setBudgets(await repo.listBudgets());
+        setBudgetsError(null);
+      } catch (e) {
+        setBudgetsError(e instanceof Error ? e.message : "Orçamentos indisponíveis.");
+      }
       try {
         setInvestments(await repo.listInvestments());
         setInvestmentsError(null);
@@ -153,6 +166,10 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       deleteAccount: (id) => run(() => repo.deleteAccount(id)),
       saveCategory: (c) => run(() => repo.saveCategory(c)),
       deleteCategory: (id) => run(() => repo.deleteCategory(id)),
+      budgets,
+      budgetsError,
+      saveBudget: (b) => run(() => repo.saveBudget(b)),
+      deleteBudget: (id) => run(() => repo.deleteBudget(id)),
       removing,
       investments,
       investmentsError,
@@ -161,7 +178,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       accountById: (id) => accMap.get(id),
       categoryById: (id) => (id ? catMap.get(id) : undefined),
     };
-  }, [month, accounts, categories, windowTx, removing, animatedRemove, investments, investmentsError, loading, error, reload, sheet, run, to]);
+  }, [month, accounts, categories, windowTx, budgets, budgetsError, removing, animatedRemove, investments, investmentsError, loading, error, reload, sheet, run, to]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

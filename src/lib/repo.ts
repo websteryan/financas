@@ -1,7 +1,7 @@
 import { isCloud } from "./supabase/config";
 import { supabaseBrowser } from "./supabase/client";
 import { addMonthsISO, currentYM, monthStart, shiftYM, todayISO, uid } from "./format";
-import type { Account, Category, Investment, NewInvestment, NewTransaction, Transaction } from "./types";
+import type { Account, Budget, Category, Investment, NewInvestment, NewTransaction, Transaction } from "./types";
 
 export interface Repo {
   listAccounts(): Promise<Account[]>;
@@ -19,6 +19,9 @@ export interface Repo {
   listInvestments(): Promise<Investment[]>;
   saveInvestment(i: NewInvestment & { id?: string }): Promise<void>;
   deleteInvestment(id: string): Promise<void>;
+  listBudgets(): Promise<Budget[]>;
+  saveBudget(b: { category_id: string; limit_cents: number }): Promise<void>;
+  deleteBudget(categoryId: string): Promise<void>;
   signOut(): Promise<void>;
 }
 
@@ -100,6 +103,15 @@ const cloudRepo: Repo = {
   async deleteInvestment(id) {
     check(await supabaseBrowser().from("investments").delete().eq("id", id));
   },
+  async listBudgets() {
+    return check(await supabaseBrowser().from("budgets").select("id,category_id,limit_cents"));
+  },
+  async saveBudget(b) {
+    check(await supabaseBrowser().from("budgets").upsert(b, { onConflict: "user_id,category_id" }));
+  },
+  async deleteBudget(categoryId) {
+    check(await supabaseBrowser().from("budgets").delete().eq("category_id", categoryId));
+  },
   async signOut() {
     await supabaseBrowser().auth.signOut();
   },
@@ -112,6 +124,7 @@ interface LocalDB {
   categories: Category[];
   transactions: Transaction[];
   investments?: Investment[];
+  budgets?: Budget[];
 }
 
 const KEY = "financas-demo-v1";
@@ -194,7 +207,12 @@ function seed(): LocalDB {
     inv("HGLG11", "fiis", "XP", 120000, 2, 15),
     inv("Bitcoin", "cripto", "Binance", 80000, 1, 4),
   ];
-  return { accounts, categories, transactions: tx, investments };
+  const budgets: Budget[] = [
+    { id: uid(), category_id: cat("Alimentação"), limit_cents: 60000 },
+    { id: uid(), category_id: cat("Mercado"), limit_cents: 80000 },
+    { id: uid(), category_id: cat("Lazer"), limit_cents: 30000 },
+  ];
+  return { accounts, categories, transactions: tx, investments, budgets };
 }
 
 function load(): LocalDB {
@@ -298,6 +316,20 @@ const localRepo: Repo = {
   async deleteInvestment(id) {
     mutate((db) => {
       db.investments = (db.investments ?? []).filter((x) => x.id !== id);
+    });
+  },
+  async listBudgets() {
+    return load().budgets ?? [];
+  },
+  async saveBudget(b) {
+    mutate((db) => {
+      const list = (db.budgets ?? []).filter((x) => x.category_id !== b.category_id);
+      db.budgets = [...list, { id: uid(), ...b }];
+    });
+  },
+  async deleteBudget(categoryId) {
+    mutate((db) => {
+      db.budgets = (db.budgets ?? []).filter((x) => x.category_id !== categoryId);
     });
   },
   async signOut() {
