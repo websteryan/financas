@@ -6,14 +6,14 @@ import { currentYM, monthLabel, shiftYM, type YM } from "@/lib/format";
 import type { AccountType } from "@/lib/types";
 
 /*
- * Sistema de forma: cartões 20px, controles (botões, campos, chips) 12px,
- * botões só de ícone são circulares.
+ * Sistema de forma: cartões 24px, blocos internos 18px, controles em pílula
+ * (botões, chips, abas); campos 16px.
  */
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-brand glow hover:brightness-110",
+  primary: "bg-brand font-semibold hover:brightness-110",
   secondary: "tile text-fg hover:bg-surface-2",
   ghost: "text-muted hover:text-fg hover:bg-surface-2",
   danger: "bg-expense/10 text-expense hover:bg-expense/15",
@@ -68,7 +68,7 @@ export function Segmented<T extends string>({
           aria-selected={value === o.value}
           onClick={() => onChange(o.value)}
           className={`h-11 flex-1 whitespace-nowrap rounded-full px-4 text-[15px] font-medium transition-all duration-200 ${
-            value === o.value ? "bg-brand glow" : "tile text-muted hover:text-fg"
+            value === o.value ? "bg-brand font-semibold" : "tile text-muted hover:text-fg"
           }`}
         >
           {o.label}
@@ -183,8 +183,8 @@ export function Sheet({
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-label={title}>
-      <button aria-label="Fechar" className="sheet-backdrop absolute inset-0 bg-[#04030a]/70 backdrop-blur-[6px]" onClick={onClose} />
-      <div className="sheet-panel relative flex max-h-[92dvh] w-full flex-col rounded-t-[32px] border border-line bg-sheet shadow-[0_-12px_80px_rgb(112_62_255/0.25)] sm:max-w-[460px] sm:rounded-[32px]">
+      <button aria-label="Fechar" className="sheet-backdrop absolute inset-0 bg-black/70 backdrop-blur-[4px]" onClick={onClose} />
+      <div className="sheet-panel relative flex max-h-[92dvh] w-full flex-col rounded-t-[28px] border border-line bg-sheet shadow-[0_-12px_60px_rgb(0_0_0/0.5)] sm:max-w-[460px] sm:rounded-[28px]">
         <div className="flex items-center justify-between px-5 pb-2 pt-4">
           <h2 className="text-[17px] font-semibold">{title}</h2>
           <IconButton label="Fechar" onClick={onClose} className="-mr-2">

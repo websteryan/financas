@@ -50,7 +50,7 @@ export default function ResumoPage() {
           {f.loading ? (
             <Skeleton className="mt-2 h-14 w-64" />
           ) : (
-            <p className={`num mt-1 text-[52px] font-light leading-none tracking-tight sm:text-[64px] ${t.balance < 0 ? "text-expense" : ""}`}>
+            <p className={`num mt-1 text-[52px] font-semibold leading-none tracking-tight sm:text-[64px] ${t.balance < 0 ? "text-expense" : ""}`}>
               {t.balance < 0 ? "-" : ""}
               {money(Math.abs(t.balance))}
             </p>

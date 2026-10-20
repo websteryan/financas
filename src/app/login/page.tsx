@@ -76,7 +76,7 @@ export default function LoginPage() {
     <main className="pt-safe flex min-h-[100dvh] items-center justify-center px-4 py-10">
       <div className="fade-in w-full max-w-[380px]">
         <div className="mb-8 flex flex-col items-center text-center">
-          <Logo size={72} className="mb-5 drop-shadow-[0_12px_28px_rgb(124_77_255/0.55)]" />
+          <Logo size={72} className="mb-5" />
           <h1 className="text-[30px] font-semibold tracking-tight">Finanças</h1>
           <p className="mt-1 text-[15px] text-muted">Seus gastos e receitas, em qualquer aparelho.</p>
         </div>

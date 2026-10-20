@@ -75,7 +75,7 @@ export default function GraficosPage() {
         ) : (
           <>
             <div className="mb-6 text-center">
-              <p className="num text-[38px] font-light leading-tight">{money(current.value)}</p>
+              <p className="num text-[38px] font-semibold leading-tight">{money(current.value)}</p>
               <p className="mt-1 text-[14px] text-muted">{current.detail}</p>
             </div>
             <StatBars data={buckets} selected={current.key} onSelect={setPick} />

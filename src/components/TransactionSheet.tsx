@@ -219,7 +219,7 @@ export function TransactionSheet() {
               const el = e.currentTarget;
               requestAnimationFrame(() => el.setSelectionRange(el.value.length, el.value.length));
             }}
-            className={`num w-full bg-transparent text-center text-[44px] font-light leading-tight outline-none focus-visible:outline-none ${
+            className={`num w-full bg-transparent text-center text-[44px] font-semibold leading-tight outline-none focus-visible:outline-none ${
               kind === "despesa" ? "text-fg" : "text-income"
             }`}
           />
