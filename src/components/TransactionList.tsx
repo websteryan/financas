@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, type CSSProperties } from "react";
 import { dayLabel, money } from "@/lib/format";
 import { useFinance } from "@/lib/store";
 import type { Transaction } from "@/lib/types";
@@ -13,7 +14,7 @@ export function Amount({ tx, className = "" }: { tx: Pick<Transaction, "kind" | 
   );
 }
 
-export function TransactionRow({ tx }: { tx: Transaction }) {
+export function TransactionRow({ tx, anim = "" , index = 0 }: { tx: Transaction; anim?: string; index?: number }) {
   const { openEdit, accountById, categoryById } = useFinance();
   const cat = categoryById(tx.category_id);
   const acc = accountById(tx.account_id);
@@ -22,7 +23,8 @@ export function TransactionRow({ tx }: { tx: Transaction }) {
     <button
       type="button"
       onClick={() => openEdit(tx)}
-      className="tile group flex w-full items-center gap-3.5 rounded-[22px] px-3.5 py-3 text-left transition-[background-color,transform] hover:bg-surface-2 active:scale-[0.99]"
+      style={{ "--i": index } as CSSProperties}
+      className={`${anim} tile group flex w-full items-center gap-3.5 rounded-[22px] px-3.5 py-3 text-left transition-[background-color,transform] hover:bg-surface-2 active:scale-[0.99]`}
     >
       <span
         className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-[15px] font-semibold"
@@ -45,6 +47,13 @@ export function TransactionRow({ tx }: { tx: Transaction }) {
 }
 
 export function TransactionList({ items }: { items: Transaction[] }) {
+  // Na primeira exibição as linhas entram em sequência; depois, só o lançamento novo "cai" na lista.
+  const seen = useRef<Set<string> | null>(null);
+  const initial = seen.current === null;
+  const known = seen.current ?? new Set<string>();
+  const fresh = new Set(items.filter((t) => !known.has(t.id)).map((t) => t.id));
+  seen.current = new Set([...known, ...items.map((t) => t.id)]);
+  let n = 0;
   const days: { date: string; items: Transaction[] }[] = [];
   for (const t of items) {
     const last = days[days.length - 1];
@@ -67,7 +76,7 @@ export function TransactionList({ items }: { items: Transaction[] }) {
             </header>
             <div className="flex flex-col gap-2.5">
               {d.items.map((t) => (
-                <TransactionRow key={t.id} tx={t} />
+                <TransactionRow key={t.id} tx={t} anim={initial ? "rise" : fresh.has(t.id) ? "item-in" : ""} index={initial ? Math.min(n++, 8) : 0} />
               ))}
             </div>
           </section>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
-import { Bank, CaretLeft, CaretRight, CreditCard, Money, PixLogo, X } from "./icons";
+import { Bank, Check, CaretLeft, CaretRight, CreditCard, Money, PixLogo, X } from "./icons";
 import { currentYM, monthLabel, shiftYM, type YM } from "@/lib/format";
 import type { AccountType } from "@/lib/types";
 
@@ -234,8 +234,11 @@ export function Toaster() {
       <p
         key={msg.id}
         role="status"
-        className="toast glass rounded-full px-5 py-3 text-sm font-medium text-fg shadow-[0_8px_30px_hsl(var(--shadow)/0.5)]"
+        className="toast glass flex items-center gap-2.5 rounded-full py-2.5 pl-2.5 pr-5 text-sm font-medium text-fg shadow-[0_8px_30px_rgb(0_0_0/0.5)]"
       >
+        <span className="pop bg-brand inline-flex size-6 items-center justify-center rounded-full">
+          <Check size={14} weight="bold" />
+        </span>
         {msg.text}
       </p>
     </div>
