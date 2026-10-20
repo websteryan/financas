@@ -1,7 +1,7 @@
 import { isCloud } from "./supabase/config";
 import { supabaseBrowser } from "./supabase/client";
 import { addMonthsISO, currentYM, monthStart, shiftYM, todayISO, uid } from "./format";
-import type { Account, Category, NewTransaction, Transaction } from "./types";
+import type { Account, Category, Investment, NewInvestment, NewTransaction, Transaction } from "./types";
 
 export interface Repo {
   listAccounts(): Promise<Account[]>;
@@ -16,6 +16,9 @@ export interface Repo {
   updateTransaction(id: string, patch: Partial<NewTransaction>): Promise<void>;
   deleteTransaction(id: string): Promise<void>;
   deleteGroup(groupId: string): Promise<void>;
+  listInvestments(): Promise<Investment[]>;
+  saveInvestment(i: NewInvestment & { id?: string }): Promise<void>;
+  deleteInvestment(id: string): Promise<void>;
   signOut(): Promise<void>;
 }
 
@@ -79,6 +82,24 @@ const cloudRepo: Repo = {
   async deleteGroup(groupId) {
     check(await supabaseBrowser().from("transactions").delete().eq("group_id", groupId));
   },
+  async listInvestments() {
+    const sb = supabaseBrowser();
+    return check(
+      await sb
+        .from("investments")
+        .select("id,name,type,institution,amount_cents,date")
+        .order("date", { ascending: false })
+        .order("created_at", { ascending: false }),
+    );
+  },
+  async saveInvestment({ id, ...i }) {
+    const sb = supabaseBrowser();
+    if (id) check(await sb.from("investments").update(i).eq("id", id));
+    else check(await sb.from("investments").insert(i));
+  },
+  async deleteInvestment(id) {
+    check(await supabaseBrowser().from("investments").delete().eq("id", id));
+  },
   async signOut() {
     await supabaseBrowser().auth.signOut();
   },
@@ -90,6 +111,7 @@ interface LocalDB {
   accounts: Account[];
   categories: Category[];
   transactions: Transaction[];
+  investments?: Investment[];
 }
 
 const KEY = "financas-demo-v1";
@@ -161,7 +183,18 @@ function seed(): LocalDB {
       group_id: group, installment: k + 1, installments: 4,
     });
   }
-  return { accounts, categories, transactions: tx };
+  const inv = (name: string, type: Investment["type"], institution: string, cents: number, monthsAgo: number, day: number): Investment => ({
+    id: uid(), name, type, institution, amount_cents: cents,
+    date: monthStart(shiftYM(now, -monthsAgo)).slice(0, 8) + String(day).padStart(2, "0"),
+  });
+  const investments: Investment[] = [
+    inv("Tesouro Selic 2029", "renda_fixa", "Tesouro Direto", 500000, 5, 6),
+    inv("CDB 110% CDI", "renda_fixa", "Nubank", 300000, 3, 12),
+    inv("PETR4", "acoes", "XP", 180000, 4, 9),
+    inv("HGLG11", "fiis", "XP", 120000, 2, 15),
+    inv("Bitcoin", "cripto", "Binance", 80000, 1, 4),
+  ];
+  return { accounts, categories, transactions: tx, investments };
 }
 
 function load(): LocalDB {
@@ -251,6 +284,20 @@ const localRepo: Repo = {
   async deleteGroup(groupId) {
     mutate((db) => {
       db.transactions = db.transactions.filter((t) => t.group_id !== groupId);
+    });
+  },
+  async listInvestments() {
+    return [...(load().investments ?? [])].sort((a, b) => b.date.localeCompare(a.date));
+  },
+  async saveInvestment({ id, ...i }) {
+    mutate((db) => {
+      const list = db.investments ?? [];
+      db.investments = id ? list.map((x) => (x.id === id ? { ...x, ...i } : x)) : [...list, { id: uid(), ...i }];
+    });
+  },
+  async deleteInvestment(id) {
+    mutate((db) => {
+      db.investments = (db.investments ?? []).filter((x) => x.id !== id);
     });
   },
   async signOut() {

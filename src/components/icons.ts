@@ -28,4 +28,5 @@ export {
   ArrowRight,
   CalendarBlank,
   GoogleLogo,
+  ChartLineUp,
 } from "@phosphor-icons/react";

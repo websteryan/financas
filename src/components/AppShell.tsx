@@ -3,7 +3,7 @@
 import { useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChartPieSlice, House, ListBullets, Plus, Wallet } from "./icons";
+import { ChartLineUp, ChartPieSlice, House, ListBullets, Plus, Wallet } from "./icons";
 import { Logo } from "./Logo";
 import { useFinance } from "@/lib/store";
 
@@ -11,6 +11,7 @@ const NAV = [
   { href: "/", label: "Resumo", icon: House },
   { href: "/lancamentos", label: "Lançamentos", icon: ListBullets },
   { href: "/graficos", label: "Gráficos", icon: ChartPieSlice },
+  { href: "/investimentos", label: "Investimentos", icon: ChartLineUp },
   { href: "/contas", label: "Contas", icon: Wallet },
 ] as const;
 

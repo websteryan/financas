@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { currentYM, monthEnd, monthStart, shiftYM, type YM } from "./format";
 import { repo } from "./repo";
-import type { Account, Category, Kind, NewTransaction, Transaction } from "./types";
+import type { Account, Category, Investment, Kind, NewInvestment, NewTransaction, Transaction } from "./types";
 
 /** Quantos meses (incluindo o selecionado) ficam carregados para os gráficos de evolução. */
 export const WINDOW_MONTHS = 6;
@@ -34,6 +34,11 @@ interface Finance {
   deleteAccount: (id: string) => Promise<void>;
   saveCategory: (c: Omit<Category, "id"> & { id?: string }) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
+  investments: Investment[];
+  /** Erro ao carregar investimentos (ex.: tabela ainda não criada); não afeta o resto do app. */
+  investmentsError: string | null;
+  saveInvestment: (i: NewInvestment & { id?: string }) => Promise<void>;
+  deleteInvestment: (id: string) => Promise<void>;
   accountById: (id: string) => Account | undefined;
   categoryById: (id: string | null) => Category | undefined;
 }
@@ -45,6 +50,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [windowTx, setWindowTx] = useState<Transaction[]>([]);
+  const [investments, setInvestments] = useState<Investment[]>([]);
+  const [investmentsError, setInvestmentsError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sheet, setSheet] = useState<SheetState>({ open: false });
@@ -63,6 +70,12 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       setCategories(c);
       setWindowTx(t);
       setError(null);
+      try {
+        setInvestments(await repo.listInvestments());
+        setInvestmentsError(null);
+      } catch (e) {
+        setInvestmentsError(e instanceof Error ? e.message : "Não foi possível carregar os investimentos.");
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não foi possível carregar os dados.");
     } finally {
@@ -117,10 +130,14 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       deleteAccount: (id) => run(() => repo.deleteAccount(id)),
       saveCategory: (c) => run(() => repo.saveCategory(c)),
       deleteCategory: (id) => run(() => repo.deleteCategory(id)),
+      investments,
+      investmentsError,
+      saveInvestment: (i) => run(() => repo.saveInvestment(i)),
+      deleteInvestment: (id) => run(() => repo.deleteInvestment(id)),
       accountById: (id) => accMap.get(id),
       categoryById: (id) => (id ? catMap.get(id) : undefined),
     };
-  }, [month, accounts, categories, windowTx, loading, error, reload, sheet, run, to]);
+  }, [month, accounts, categories, windowTx, investments, investmentsError, loading, error, reload, sheet, run, to]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

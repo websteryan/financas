@@ -31,6 +31,38 @@ export interface Transaction {
 
 export type NewTransaction = Omit<Transaction, "id" | "created_at">;
 
+export type InvestmentType = "renda_fixa" | "acoes" | "fiis" | "cripto" | "fundos" | "outros";
+
+export interface Investment {
+  id: string;
+  name: string;
+  type: InvestmentType;
+  institution: string;
+  amount_cents: number;
+  date: string; // YYYY-MM-DD
+  created_at?: string;
+}
+
+export type NewInvestment = Omit<Investment, "id" | "created_at">;
+
+export const INVESTMENT_TYPE_LABEL: Record<InvestmentType, string> = {
+  renda_fixa: "Renda fixa",
+  acoes: "Ações",
+  fiis: "FIIs",
+  cripto: "Cripto",
+  fundos: "Fundos",
+  outros: "Outros",
+};
+
+export const INVESTMENT_TYPE_COLOR: Record<InvestmentType, string> = {
+  renda_fixa: "#9b72ff",
+  acoes: "#46d99b",
+  fiis: "#f5b84a",
+  cripto: "#ff8a5b",
+  fundos: "#4aa8ff",
+  outros: "#8b8b98",
+};
+
 export const ACCOUNT_TYPE_LABEL: Record<AccountType, string> = {
   credito: "Crédito",
   debito: "Débito",
