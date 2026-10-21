@@ -3,8 +3,10 @@
 import { useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { CaretDown, CaretUp, CloudSlash, DotsSixVertical, DownloadSimple, PencilSimple, Plus, SignOut } from "@/components/icons";
 import { PageHeader, Panel } from "@/components/PageHeader";
-import { AccountGlyph, Button, Field, IconButton, Segmented, Sheet, Skeleton, inputClass, showToast } from "@/components/ui";
+import { AccountGlyph, Button, CategoryGlyph, Field, IconButton, Segmented, Sheet, Skeleton, inputClass, showToast } from "@/components/ui";
+import { CATEGORY_ICONS, iconKeyFor } from "@/lib/category-icons";
 import { money } from "@/lib/format";
+import { THEMES, getTheme, setTheme, type Theme } from "@/lib/theme";
 import { repo } from "@/lib/repo";
 import { useFinance } from "@/lib/store";
 import { isCloud } from "@/lib/supabase/config";
@@ -87,15 +89,19 @@ export default function ContasPage() {
                       key={c.id}
                       type="button"
                       onClick={() => setCatDraft(c)}
-                      className="inline-flex h-10 items-center gap-2 rounded-full border border-line bg-surface px-4 text-sm text-fg transition-colors hover:bg-surface-2"
+                      className="inline-flex h-11 items-center gap-2.5 rounded-full border border-line bg-surface pl-1.5 pr-4 text-sm text-fg transition-colors hover:bg-surface-2"
                     >
-                      <span className="size-2 rounded-full" style={{ background: c.color }} />
+                      <CategoryGlyph category={c} size={32} />
                       {c.name}
                     </button>
                   ))}
               </div>
             </div>
           ))}
+        </Panel>
+
+        <Panel title="Aparência" className="lg:col-span-2">
+          <ThemePanel />
         </Panel>
 
         <Panel title="Dados" className="lg:col-span-2">
@@ -142,6 +148,65 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (c: string)
           style={{ background: c, boxShadow: value === c ? `0 0 0 2px var(--sheet), 0 0 0 4px ${c}` : undefined }}
         />
       ))}
+    </div>
+  );
+}
+
+function IconPicker({ category, value, onChange }: { category: { name: string; color: string }; value: string; onChange: (k: string) => void }) {
+  return (
+    <div className="grid grid-cols-6 gap-2 sm:grid-cols-8">
+      {CATEGORY_ICONS.map(({ key, label, Icon }) => {
+        const on = key === value;
+        return (
+          <button
+            key={key}
+            type="button"
+            title={label}
+            aria-label={label}
+            aria-pressed={on}
+            onClick={() => onChange(key)}
+            className={`flex aspect-square items-center justify-center rounded-[12px] border transition-[background-color,border-color,transform] active:scale-90 ${on ? "border-accent-text bg-accent-soft text-fg" : "border-line text-muted hover:bg-surface-2 hover:text-fg"}`}
+            style={on ? { color: category.color } : undefined}
+          >
+            <Icon size={20} weight={on ? "fill" : "regular"} />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function ThemePanel() {
+  const [theme, set] = useState<Theme>("minimal");
+  useLayoutEffect(() => set(getTheme()), []);
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      {THEMES.map((t) => {
+        const on = theme === t.value;
+        return (
+          <button
+            key={t.value}
+            type="button"
+            aria-pressed={on}
+            onClick={() => {
+              setTheme(t.value);
+              set(t.value);
+            }}
+            className={`rounded-[16px] border p-3.5 text-left transition-colors ${on ? "border-accent-text bg-accent-soft" : "border-line hover:bg-surface-2"}`}
+          >
+            <span
+              className="mb-3 flex h-14 items-end gap-1 rounded-[10px] p-2"
+              style={{ background: t.value === "minimal" ? "#000" : "#07050c", border: t.value === "minimal" ? "1px solid rgb(255 255 255/.12)" : "1px solid rgb(190 170 255/.14)" }}
+            >
+              {[40, 70, 52, 90].map((h, i) => (
+                <span key={i} className="flex-1" style={{ height: `${h}%`, borderRadius: t.value === "minimal" ? 3 : 99, background: t.value === "minimal" ? (i === 3 ? "#8467f0" : "#3a3a3d") : i === 3 ? "linear-gradient(#6b3de0,#4f27b5)" : "#2a1f4d" }} />
+              ))}
+            </span>
+            <span className="block text-[15px] font-medium text-fg">{t.label}</span>
+            <span className="block text-[12.5px] text-muted">{t.hint}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -310,6 +375,13 @@ function CategorySheet({ draft, onClose }: { draft: CategoryDraft | null; onClos
               { value: "despesa", label: "Gasto" },
               { value: "receita", label: "Receita" },
             ]}
+          />
+        </Field>
+        <Field label="Ícone">
+          <IconPicker
+            category={form}
+            value={iconKeyFor(form)}
+            onChange={(icon) => setForm({ ...form, icon })}
           />
         </Field>
         <Field label="Cor">

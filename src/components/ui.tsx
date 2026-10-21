@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ButtonHTMLAttributes, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ButtonHTMLAttributes, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { Bank, Check, CaretLeft, CaretRight, CreditCard, Money, PixLogo, X } from "./icons";
 import { currentYM, money, monthLabel, shiftYM, type YM } from "@/lib/format";
+import { categoryIcon } from "@/lib/category-icons";
 import type { PaymentMethod } from "@/lib/types";
 
 /*
@@ -129,11 +130,23 @@ export function Chip({
 export function AccountGlyph({ color, size = 36 }: { color: string; size?: number }) {
   const Icon = Bank;
   return (
-    <span
-      className="inline-flex shrink-0 items-center justify-center rounded-full"
-      style={{ width: size, height: size, background: `${color}1f`, color }}
-    >
+    <span className="cat-glyph inline-flex shrink-0 items-center justify-center" style={{ width: size, height: size, "--c": color } as CSSProperties}>
       <Icon size={Math.round(size * 0.5)} weight="bold" />
+    </span>
+  );
+}
+
+/** Ícone da categoria. Moderno: tingido com a cor da categoria. Minimal: monocromático (a cor fica nos gráficos). */
+export function CategoryGlyph({ category, size = 44, fallback }: { category?: { name: string; color: string; icon?: string | null } | null; size?: number; fallback?: string }) {
+  const color = category?.color ?? "#8b8b93";
+  const Icon = category ? categoryIcon(category) : categoryIcon({ name: fallback ?? "" });
+  return (
+    <span
+      className="cat-glyph inline-flex shrink-0 items-center justify-center"
+      style={{ width: size, height: size, "--c": color } as CSSProperties}
+      aria-hidden
+    >
+      <Icon size={Math.round(size * 0.46)} weight="bold" />
     </span>
   );
 }

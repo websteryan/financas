@@ -77,7 +77,7 @@ export default function LoginPage() {
       <div className="fade-in w-full max-w-[380px]">
         <div className="mb-8 flex flex-col items-center text-center">
           <Logo size={72} className="mb-5" />
-          <h1 className="text-[30px] font-semibold tracking-tight">Finanças</h1>
+          <h1 className="text-[30px] font-semibold tracking-tight">Lastro</h1>
           <p className="mt-1 text-[15px] text-muted">Seus gastos e receitas, em qualquer aparelho.</p>
         </div>
 

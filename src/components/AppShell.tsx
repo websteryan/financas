@@ -39,8 +39,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Barra lateral (computador) */}
       <aside className="glass fixed inset-y-3 left-3 z-30 hidden w-60 flex-col rounded-[24px] px-4 py-6 lg:flex">
         <div className="flex items-center gap-2.5 px-2">
-          <Logo size={38} className="drop-shadow-[0_6px_14px_rgb(91_47_208/0.45)]" />
-          <span className="text-[17px] font-semibold tracking-tight">Finanças</span>
+          <Logo size={38} />
+          <span className="text-[17px] font-semibold tracking-tight">Lastro</span>
         </div>
         <button
           onClick={() => openNew()}

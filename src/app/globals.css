@@ -1,7 +1,49 @@
 @import "tailwindcss";
 
-/* Tema escuro, cartões planos e acento lilás (único tema do app) */
-:root {
+/*
+ * Dois temas escuros, escolhidos em Contas e guardados no aparelho (data-theme no <html>).
+ * Minimal (padrão): preto, bordas finas, tipografia Geist, acento roxo contido.
+ * Moderno: Ametista & Obsidiana, roxo profundo, Urbanist, movimento expressivo.
+ */
+:root,
+:root[data-theme="minimal"] {
+  --bg: #000000;
+  --sheet: #0a0a0a;
+  --surface: #0a0a0a;
+  --surface-2: #111111;
+  --surface-3: #1a1a1a;
+  --line: rgb(255 255 255 / 0.09);
+  --fg: #ededed;
+  --muted: #8f8f96;
+  --accent: #6d4de0;
+  --accent-strong: #8467f0;
+  --accent-text: #a592f4;
+  --accent-soft: rgb(132 103 240 / 0.13);
+  --accent-fg: #ffffff;
+  --income: #3ecf8e;
+  --expense: #f0707f;
+  --warn: #f2b84b;
+  --shadow: 0 0% 0%;
+  --chart-income: #3ecf8e;
+  --chart-expense: #8467f0;
+  --grid: rgb(255 255 255 / 0.07);
+  --r-card: 16px;
+  --r-tile: 12px;
+  --r-glyph: 10px;
+  --display: var(--font-geist);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --halo: transparent;
+  --glass: rgb(10 10 10 / 0.8);
+  --brand-bg: var(--accent);
+  --logo-tile: #0a0a0a;
+  --logo-sheen: transparent;
+  --logo-ink: #f4f4f5;
+  --logo-dot: #8b5cf6;
+  color-scheme: dark;
+}
+
+:root[data-theme="moderno"] {
   /* Ametista & Obsidiana (ver docs/DESIGN.md) */
   --bg: #07050c;
   --sheet: #0e0a18;
@@ -15,17 +57,23 @@
   --accent-strong: #7545e8;
   --accent-text: #9b7bf2;
   --accent-soft: rgb(117 69 232 / 0.16);
-  --accent-fg: #ffffff;
-  --income: #3ccb8b;
-  --expense: #f26d82;
-  --warn: #f2b84b;
   --shadow: 255 30% 3%;
   --chart-income: #3ccb8b;
   --chart-expense: #7545e8;
   --grid: rgb(190 170 255 / 0.08);
+  --r-card: 24px;
+  --r-tile: 18px;
+  --r-glyph: 9999px;
+  --display: var(--font-urbanist), var(--font-geist);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  color-scheme: dark;
+  --halo: rgb(91 47 208 / 0.22);
+  --glass: rgb(14 10 24 / 0.92);
+  --brand-bg: linear-gradient(180deg, #6b3de0 0%, #4f27b5 100%);
+  --logo-tile: #4a24b0;
+  --logo-sheen: linear-gradient(150deg, rgb(139 92 246 / 0.9), rgb(46 21 115 / 0.9));
+  --logo-ink: #ffffff;
+  --logo-dot: #ffffff;
 }
 
 @theme inline {
@@ -47,7 +95,7 @@
   --color-chart-income: var(--chart-income);
   --color-chart-expense: var(--chart-expense);
   --font-sans: var(--font-geist), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-display: var(--font-urbanist), var(--font-geist), -apple-system, sans-serif;
+  --font-display: var(--display), -apple-system, sans-serif;
   --color-surface-3: var(--surface-3);
 }
 
@@ -71,7 +119,7 @@ body::before {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: radial-gradient(90% 40% at 50% -6%, rgb(91 47 208 / 0.22), transparent 70%);
+  background: radial-gradient(90% 40% at 50% -6%, var(--halo), transparent 70%);
 }
 
 /* iOS: evita zoom ao focar campos */
@@ -79,7 +127,7 @@ body::before {
   h1,
   h2,
   h3 {
-    font-family: var(--font-display);
+    font-family: var(--display), sans-serif;
     letter-spacing: -0.02em;
     text-wrap: balance;
   }
@@ -107,21 +155,32 @@ body::before {
 .card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 24px;
+  border-radius: var(--r-card);
 }
 .tile {
   background: var(--surface-2);
   border: 1px solid var(--line);
 }
 .glass {
-  background: rgb(14 10 24 / 0.92);
+  background: var(--glass);
   border: 1px solid var(--line);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
 }
 .bg-brand {
-  background: linear-gradient(180deg, #6b3de0 0%, #4f27b5 100%);
+  background: var(--brand-bg);
   color: var(--accent-fg);
+}
+.cat-glyph {
+  background: var(--surface-3);
+  color: #d4d4d8;
+  border: 1px solid var(--line);
+  border-radius: var(--r-glyph);
+}
+:root[data-theme="moderno"] .cat-glyph {
+  background: color-mix(in srgb, var(--c) 17%, transparent);
+  color: var(--c);
+  border-color: transparent;
 }
 .glow {
   box-shadow: none;

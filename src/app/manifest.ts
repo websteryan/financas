@@ -2,15 +2,15 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Finanças",
-    short_name: "Finanças",
+    name: "Lastro",
+    short_name: "Lastro",
     description: "Controle simples de gastos e receitas.",
     start_url: "/",
     scope: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#07050c",
-    theme_color: "#07050c",
+    background_color: "#000000",
+    theme_color: "#000000",
     lang: "pt-BR",
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },

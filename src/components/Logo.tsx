@@ -1,23 +1,11 @@
-import { useId } from "react";
-
-/** Marca do app: F de movimento (pontas no mesmo corte de 60°). */
+/** Marca Lastro: quadrado de contorno com a peça assentada na base. O acabamento vem do tema (ver --logo-* no CSS). */
 export function Logo({ size = 36, className = "" }: { size?: number; className?: string }) {
-  const id = useId().replace(/:/g, "");
   return (
-    <svg width={size} height={size} viewBox="0 0 512 512" fill="none" className={className} role="img" aria-label="Finanças">
-      <defs>
-        <linearGradient id={`${id}b`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#7c4cf0" />
-          <stop offset="1" stopColor="#3a1b8c" />
-        </linearGradient>
-        <radialGradient id={`${id}h`} cx="0.3" cy="0.05" r="0.8">
-          <stop offset="0" stopColor="#fff" stopOpacity="0.32" />
-          <stop offset="1" stopColor="#fff" stopOpacity="0" />
-        </radialGradient>
-      </defs>
-      <rect width="512" height="512" rx="128" fill={`url(#${id}b)`} />
-      <rect width="512" height="512" rx="128" fill={`url(#${id}h)`} />
-      <path fill="#fff" d="M176 128H372L338 186H234V236H318L286 292H234V384H176Z" />
+    <svg width={size} height={size} viewBox="0 0 512 512" fill="none" className={className} role="img" aria-label="Lastro">
+      <rect width="512" height="512" rx="116" fill="var(--logo-tile)" />
+      <rect width="512" height="512" rx="116" fill="var(--logo-sheen)" />
+      <rect x="140" y="140" width="232" height="232" rx="68" stroke="var(--logo-ink)" strokeWidth="28" />
+      <rect x="194" y="288" width="124" height="46" rx="23" fill="var(--logo-dot)" />
     </svg>
   );
 }

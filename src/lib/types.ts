@@ -22,6 +22,8 @@ export interface Category {
   name: string;
   kind: Kind;
   color: string;
+  /** Chave do ícone (veja category-icons). Vazio: deduzido pelo nome. */
+  icon?: string | null;
 }
 
 export interface Transaction {

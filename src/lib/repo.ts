@@ -56,12 +56,23 @@ const cloudRepo: Repo = {
   },
   async listCategories() {
     const sb = supabaseBrowser();
-    return check(await sb.from("categories").select("id,name,kind,color").order("created_at"));
+    const res = await sb.from("categories").select("id,name,kind,color,icon").order("created_at");
+    // Banco ainda sem a coluna "icon" (SQL pendente): lê sem ela.
+    if (res.error && /icon/i.test(res.error.message)) {
+      return check(await sb.from("categories").select("id,name,kind,color").order("created_at"));
+    }
+    return check(res);
   },
   async saveCategory({ id, ...c }) {
     const sb = supabaseBrowser();
-    if (id) check(await sb.from("categories").update(c).eq("id", id));
-    else check(await sb.from("categories").insert(c));
+    const run = (row: typeof c) => (id ? sb.from("categories").update(row).eq("id", id) : sb.from("categories").insert(row));
+    const res = await run(c);
+    if (res.error && /icon/i.test(res.error.message)) {
+      const { icon: _i, ...rest } = c;
+      check(await run(rest));
+      return;
+    }
+    check(res);
   },
   async deleteCategory(id) {
     check(await supabaseBrowser().from("categories").delete().eq("id", id));

@@ -132,3 +132,6 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- Ícone da categoria (chave do ícone escolhido no app)
+alter table public.categories add column if not exists icon text;

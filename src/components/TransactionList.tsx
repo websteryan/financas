@@ -2,7 +2,7 @@
 
 import { useRef, type CSSProperties, type PointerEvent as RPointerEvent } from "react";
 import { PencilSimple, Trash } from "./icons";
-import { showToast } from "./ui";
+import { CategoryGlyph, showToast } from "./ui";
 import { dayLabel, money } from "@/lib/format";
 import { useFinance } from "@/lib/store";
 import { PAYMENT_LABEL, methodOf, type Transaction } from "@/lib/types";
@@ -60,7 +60,6 @@ export function TransactionRow({ tx, anim = "" , index = 0 }: { tx: Transaction;
   const leaving = removing.has(tx.id);
   const cat = categoryById(tx.category_id);
   const acc = accountById(tx.account_id);
-  const color = cat?.color ?? "#8b8b93";
   return (
     <div className={`grid transition-[grid-template-rows] duration-300 ease-[var(--ease-out)] ${leaving ? "grid-rows-[0fr]" : "grid-rows-[1fr]"}`}>
     <div className="min-h-0 overflow-hidden">
@@ -86,13 +85,7 @@ export function TransactionRow({ tx, anim = "" , index = 0 }: { tx: Transaction;
       style={{ "--i": index } as CSSProperties}
       className={`${leaving ? "item-out" : anim} tile group relative flex w-full touch-pan-y items-center gap-3.5 rounded-[22px] px-3.5 py-3 text-left transition-[background-color,transform] hover:bg-surface-3 active:scale-[0.99]`}
     >
-      <span
-        className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-[15px] font-semibold"
-        style={{ background: `${color}2b`, color }}
-        aria-hidden
-      >
-        {(cat?.name ?? tx.description).charAt(0).toUpperCase()}
-      </span>
+      <CategoryGlyph category={cat} size={44} fallback={tx.description} />
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[16px] font-medium text-fg">{tx.description}</span>
         <span className="block truncate text-[13px] text-muted">
