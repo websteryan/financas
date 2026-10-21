@@ -9,6 +9,7 @@ import { Panel } from "@/components/PageHeader";
 import { TransactionList } from "@/components/TransactionList";
 import { AccountGlyph, BigMoney, Button, IconButton, Empty, MonthPicker, Segmented, Skeleton } from "@/components/ui";
 import { NewButton } from "@/components/PageHeader";
+import { PendingBlock } from "@/components/Recurring";
 import { Logo } from "@/components/Logo";
 import { byCategory, monthlySeries, statBuckets, type StatMode } from "@/lib/derive";
 import { money } from "@/lib/format";
@@ -72,6 +73,8 @@ export default function ResumoPage() {
         </div>
         <NewButton />
       </header>
+
+      <PendingBlock />
 
       {f.error && <p className="mb-4 rounded-[16px] bg-expense/10 px-4 py-3 text-sm text-expense">{f.error}</p>}
 

@@ -1,7 +1,7 @@
 import { isCloud } from "./supabase/config";
 import { supabaseBrowser } from "./supabase/client";
 import { addMonthsISO, currentYM, monthStart, shiftYM, todayISO, uid } from "./format";
-import type { Account, Budget, PaymentMethod, Category, Investment, NewInvestment, NewTransaction, Transaction } from "./types";
+import type { Account, Budget, NewRecurringRule, RecurringRule, PaymentMethod, Category, Investment, NewInvestment, NewTransaction, Transaction } from "./types";
 
 export interface Repo {
   listAccounts(): Promise<Account[]>;
@@ -23,6 +23,9 @@ export interface Repo {
   listInvestments(): Promise<Investment[]>;
   saveInvestment(i: NewInvestment & { id?: string }): Promise<void>;
   deleteInvestment(id: string): Promise<void>;
+  listRecurring(): Promise<RecurringRule[]>;
+  saveRecurring(r: NewRecurringRule & { id?: string }): Promise<void>;
+  deleteRecurring(id: string): Promise<void>;
   listBudgets(): Promise<Budget[]>;
   saveBudget(b: { category_id: string; limit_cents: number }): Promise<void>;
   deleteBudget(categoryId: string): Promise<void>;
@@ -155,6 +158,22 @@ const cloudRepo: Repo = {
   async deleteInvestment(id) {
     check(await supabaseBrowser().from("investments").delete().eq("id", id));
   },
+  async listRecurring() {
+    return check(
+      await supabaseBrowser()
+        .from("recurring_rules")
+        .select("id,description,kind,amount_cents,day,account_id,category_id,method,start_ym,last_ym,active")
+        .order("created_at"),
+    );
+  },
+  async saveRecurring({ id, ...r }) {
+    const sb = supabaseBrowser();
+    if (id) check(await sb.from("recurring_rules").update(r).eq("id", id));
+    else check(await sb.from("recurring_rules").insert(r));
+  },
+  async deleteRecurring(id) {
+    check(await supabaseBrowser().from("recurring_rules").delete().eq("id", id));
+  },
   async listBudgets() {
     return check(await supabaseBrowser().from("budgets").select("id,category_id,limit_cents"));
   },
@@ -177,6 +196,7 @@ interface LocalDB {
   transactions: Transaction[];
   investments?: Investment[];
   budgets?: Budget[];
+  recurring?: RecurringRule[];
 }
 
 const KEY = "financas-demo-v1";
@@ -266,7 +286,12 @@ function seed(): LocalDB {
     { id: uid(), category_id: cat("Mercado"), limit_cents: 80000 },
     { id: uid(), category_id: cat("Lazer"), limit_cents: 30000 },
   ];
-  return { accounts, categories, transactions: tx, investments, budgets };
+  const t0 = new Date();
+  const thisYm = `${t0.getFullYear()}-${String(t0.getMonth() + 1).padStart(2, "0")}`;
+  const recurring: RecurringRule[] = [
+    { id: uid(), description: "Streaming e música", kind: "despesa", amount_cents: 5590, day: 1, account_id: nu, category_id: cat("Assinaturas"), method: "credito", start_ym: thisYm, last_ym: null, active: true },
+  ];
+  return { accounts, categories, transactions: tx, investments, budgets, recurring };
 }
 
 function load(): LocalDB {
@@ -382,6 +407,20 @@ const localRepo: Repo = {
   async deleteInvestment(id) {
     mutate((db) => {
       db.investments = (db.investments ?? []).filter((x) => x.id !== id);
+    });
+  },
+  async listRecurring() {
+    return load().recurring ?? [];
+  },
+  async saveRecurring({ id, ...r }) {
+    mutate((db) => {
+      const list = db.recurring ?? [];
+      db.recurring = id ? list.map((x) => (x.id === id ? { ...x, ...r } : x)) : [...list, { id: uid(), ...r }];
+    });
+  },
+  async deleteRecurring(id) {
+    mutate((db) => {
+      db.recurring = (db.recurring ?? []).filter((x) => x.id !== id);
     });
   },
   async listBudgets() {

@@ -59,6 +59,25 @@ export interface Budget {
   limit_cents: number;
 }
 
+/** Regra de lançamento que se repete todo mês; cada vencimento vira "A confirmar" até você confirmar ou pular. */
+export interface RecurringRule {
+  id: string;
+  description: string;
+  kind: Kind;
+  amount_cents: number;
+  /** Dia do mês (1-31); em meses curtos vale o último dia. */
+  day: number;
+  account_id: string;
+  category_id: string | null;
+  method: PaymentMethod | null;
+  /** Primeiro mês da regra, "YYYY-MM". */
+  start_ym: string;
+  /** Último mês já resolvido (confirmado ou pulado), "YYYY-MM"; vazio se nenhum. */
+  last_ym: string | null;
+  active: boolean;
+}
+export type NewRecurringRule = Omit<RecurringRule, "id">;
+
 export type InvestmentType = "renda_fixa" | "acoes" | "fiis" | "cripto" | "fundos" | "outros";
 
 export interface Investment {

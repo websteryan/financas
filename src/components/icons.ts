@@ -32,6 +32,7 @@ export {
   DotsSixVertical,
   CaretUp,
   CaretDown,
+  ArrowsClockwise,
   ArrowsLeftRight,
   SlidersHorizontal,
   Eye,

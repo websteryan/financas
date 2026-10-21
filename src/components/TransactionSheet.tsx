@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Minus, Plus, Trash } from "./icons";
+import { ArrowsClockwise, Minus, Plus, Trash } from "./icons";
 import { AccountGlyph, Button, Chip, Field, MethodIcon, Segmented, Sheet, inputClass, showToast } from "./ui";
 import { addMonthsISO, money, splitCents, todayISO, uid, moneyPlain } from "@/lib/format";
 import { useFinance } from "@/lib/store";
@@ -18,7 +18,7 @@ function yesterdayISO() {
 }
 
 export function TransactionSheet() {
-  const { sheet, closeSheet, accounts, categories, windowTx, addTransactions, updateTransaction, deleteTransaction, deleteGroup } =
+  const { sheet, closeSheet, accounts, categories, windowTx, addTransactions, updateTransaction, deleteTransaction, deleteGroup, saveRule, recurringError } =
     useFinance();
   const editing = sheet.open ? sheet.tx : null;
 
@@ -30,6 +30,7 @@ export function TransactionSheet() {
   const [method, setMethod] = useState<PaymentMethod>("debito");
   const [date, setDate] = useState(todayISO());
   const [parcelas, setParcelas] = useState(1);
+  const [repeat, setRepeat] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -44,6 +45,7 @@ export function TransactionSheet() {
     setError(null);
     setSaving(false);
     setConfirmDelete(false);
+    setRepeat(false);
     if (tx) {
       setKind(tx.kind);
       setCents(tx.amount_cents);
@@ -126,6 +128,15 @@ export function TransactionSheet() {
           installments: n > 1 ? n : null,
         }));
         await addTransactions(rows);
+        if (repeat && n === 1 && !recurringError) {
+          const [y, m, d] = date.split("-").map(Number);
+          const next = m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, "0")}`;
+          try {
+            await saveRule({ description: desc, kind, amount_cents: cents, day: d, account_id: accountId, category_id: categoryId, method: kind === "despesa" ? method : null, start_ym: next, last_ym: null, active: true });
+          } catch {
+            showToast("Lançado, mas não foi possível criar a recorrência.");
+          }
+        }
       }
       showToast(editing ? "Alterações salvas" : kind === "despesa" ? "Gasto adicionado" : "Receita adicionada");
       closeSheet();
@@ -327,6 +338,25 @@ export function TransactionSheet() {
               </button>
             </div>
           </Field>
+        )}
+
+        {!editing && parcelas === 1 && !recurringError && (
+          <button
+            type="button"
+            role="switch"
+            aria-checked={repeat}
+            onClick={() => setRepeat(!repeat)}
+            className="tile flex w-full items-center gap-3 rounded-field px-4 py-3 text-left"
+          >
+            <ArrowsClockwise size={20} className="shrink-0 text-muted" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-medium">Repetir todo mês</span>
+              <span className="block text-[13px] text-muted">Aparece em "A confirmar" no dia {date.split("-")[2]}.</span>
+            </span>
+            <span className={`relative h-6 w-10 shrink-0 rounded-full transition-colors ${repeat ? "bg-accent" : "bg-surface-3"}`}>
+              <span className={`absolute top-0.5 size-5 rounded-full bg-white transition-[left] ${repeat ? "left-[18px]" : "left-0.5"}`} />
+            </span>
+          </button>
         )}
 
         <Field label="Data" htmlFor="data">

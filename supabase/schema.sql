@@ -138,3 +138,24 @@ alter table public.categories add column if not exists icon text;
 
 -- Ajuste de saldo e transferência entre contas (não contam como gasto nem receita)
 alter table public.transactions add column if not exists special text check (special in ('ajuste', 'transferencia'));
+
+-- Lançamentos recorrentes (regras; cada vencimento vira "A confirmar" no app)
+create table if not exists public.recurring_rules (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  description text not null,
+  kind text not null check (kind in ('despesa', 'receita')),
+  amount_cents bigint not null check (amount_cents > 0),
+  day int not null check (day between 1 and 31),
+  account_id uuid not null references public.accounts(id) on delete cascade,
+  category_id uuid references public.categories(id) on delete set null,
+  method text check (method in ('credito', 'debito', 'pix', 'dinheiro')),
+  start_ym text not null,
+  last_ym text,
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+alter table public.recurring_rules enable row level security;
+drop policy if exists "own recurring" on public.recurring_rules;
+create policy "own recurring" on public.recurring_rules
+  for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));

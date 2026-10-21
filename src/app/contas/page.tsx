@@ -4,6 +4,7 @@ import { useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEve
 import { ArrowsLeftRight, CaretDown, CaretUp, SlidersHorizontal, CloudSlash, DotsSixVertical, DownloadSimple, PencilSimple, Plus, SignOut } from "@/components/icons";
 import { AdjustSheet, TransferSheet } from "@/components/AccountActions";
 import { PageHeader, Panel } from "@/components/PageHeader";
+import { RecurringPanel } from "@/components/Recurring";
 import { AccountGlyph, Button, CategoryGlyph, Field, IconButton, Segmented, Sheet, Skeleton, inputClass, showToast } from "@/components/ui";
 import { CATEGORY_ICONS, iconKeyFor } from "@/lib/category-icons";
 import { money, moneyPlain } from "@/lib/format";
@@ -102,6 +103,12 @@ export default function ContasPage() {
             </div>
           ))}
         </Panel>
+
+        {!f.recurringError && (
+          <Panel title="Recorrentes" className="lg:col-span-2">
+            <RecurringPanel />
+          </Panel>
+        )}
 
         <Panel title="Aparência" className="lg:col-span-2">
           <ThemePanel />
