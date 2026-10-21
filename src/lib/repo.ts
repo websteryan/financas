@@ -37,6 +37,8 @@ export interface Repo {
   deleteGoalDeposit(id: string): Promise<void>;
   /** Variação líquida de todas as contas por mês ("YYYY-MM"), incluindo ajustes. */
   monthlyNet(): Promise<Record<string, number>>;
+  savePushSub(s: { endpoint: string; p256dh: string; auth: string; tz: string }): Promise<void>;
+  deletePushSub(endpoint: string): Promise<void>;
   signOut(): Promise<void>;
 }
 
@@ -198,6 +200,12 @@ const cloudRepo: Repo = {
       if (rows.length < 1000) break;
     }
     return out;
+  },
+  async savePushSub(s) {
+    check(await supabaseBrowser().from("push_subscriptions").upsert(s, { onConflict: "endpoint" }));
+  },
+  async deletePushSub(endpoint) {
+    check(await supabaseBrowser().from("push_subscriptions").delete().eq("endpoint", endpoint));
   },
   async listRecurring() {
     return check(
@@ -488,6 +496,10 @@ const localRepo: Repo = {
     }
     return out;
   },
+  async savePushSub() {
+    /* sem notificações no modo demonstração */
+  },
+  async deletePushSub() {},
   async listRecurring() {
     return load().recurring ?? [];
   },

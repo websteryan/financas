@@ -5,6 +5,7 @@ import { ArrowsLeftRight, CaretDown, CaretUp, SlidersHorizontal, CloudSlash, Dot
 import { AdjustSheet, TransferSheet } from "@/components/AccountActions";
 import { PageHeader, Panel } from "@/components/PageHeader";
 import { RecurringPanel } from "@/components/Recurring";
+import { PushPanel } from "@/components/PushPanel";
 import { AccountGlyph, Button, CategoryGlyph, Field, IconButton, Segmented, Sheet, Skeleton, inputClass, showToast } from "@/components/ui";
 import { CATEGORY_ICONS, iconKeyFor } from "@/lib/category-icons";
 import { money, moneyPlain } from "@/lib/format";
@@ -109,6 +110,10 @@ export default function ContasPage() {
             <RecurringPanel />
           </Panel>
         )}
+
+        <Panel title="Lembretes" className="lg:col-span-2">
+          <PushPanel />
+        </Panel>
 
         <Panel title="Aparência" className="lg:col-span-2">
           <ThemePanel />
