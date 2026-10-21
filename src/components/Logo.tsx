@@ -7,8 +7,8 @@ export function Logo({ size = 36, className = "" }: { size?: number; className?:
     <svg width={size} height={size} viewBox="0 0 512 512" fill="none" className={className} role="img" aria-label="Finanças">
       <defs>
         <linearGradient id={`${id}b`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#9566ff" />
-          <stop offset="1" stopColor="#5a2fe0" />
+          <stop offset="0" stopColor="#7c4cf0" />
+          <stop offset="1" stopColor="#3a1b8c" />
         </linearGradient>
         <radialGradient id={`${id}h`} cx="0.3" cy="0.05" r="0.8">
           <stop offset="0" stopColor="#fff" stopOpacity="0.32" />

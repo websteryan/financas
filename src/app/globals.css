@@ -2,24 +2,27 @@
 
 /* Tema escuro, cartões planos e acento lilás (único tema do app) */
 :root {
-  --bg: #0a0a0d;
-  --sheet: #121215;
-  --surface: #141418;
-  --surface-2: #1c1c22;
-  --surface-3: #26262d;
-  --line: rgb(255 255 255 / 0.08);
-  --fg: #f4f4f7;
-  --muted: #92929e;
-  --accent: #9b72ff;
-  --accent-text: #bba4ff;
-  --accent-soft: rgb(155 114 255 / 0.16);
-  --accent-fg: #0b0816;
-  --income: #46d99b;
-  --expense: #ff7d8d;
+  /* Ametista & Obsidiana (ver docs/DESIGN.md) */
+  --bg: #07050c;
+  --sheet: #0e0a18;
+  --surface: #0e0a18;
+  --surface-2: #161026;
+  --surface-3: #1f1736;
+  --line: rgb(190 170 255 / 0.1);
+  --fg: #f4f1fb;
+  --muted: #9b94b5;
+  --accent: #5b2fd0;
+  --accent-strong: #7545e8;
+  --accent-text: #9b7bf2;
+  --accent-soft: rgb(117 69 232 / 0.16);
+  --accent-fg: #ffffff;
+  --income: #3ccb8b;
+  --expense: #f26d82;
+  --warn: #f2b84b;
   --shadow: 255 30% 3%;
-  --chart-income: #46d99b;
-  --chart-expense: #9b72ff;
-  --grid: rgb(255 255 255 / 0.07);
+  --chart-income: #3ccb8b;
+  --chart-expense: #7545e8;
+  --grid: rgb(190 170 255 / 0.08);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   color-scheme: dark;
@@ -37,6 +40,8 @@
   --color-accent-text: var(--accent-text);
   --color-accent-soft: var(--accent-soft);
   --color-accent-fg: var(--accent-fg);
+  --color-accent-strong: var(--accent-strong);
+  --color-warn: var(--warn);
   --color-income: var(--income);
   --color-expense: var(--expense);
   --color-chart-income: var(--chart-income);
@@ -66,7 +71,7 @@ body::before {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: radial-gradient(90% 40% at 50% -6%, rgb(155 114 255 / 0.16), transparent 70%);
+  background: radial-gradient(90% 40% at 50% -6%, rgb(91 47 208 / 0.22), transparent 70%);
 }
 
 /* iOS: evita zoom ao focar campos */
@@ -109,13 +114,13 @@ body::before {
   border: 1px solid var(--line);
 }
 .glass {
-  background: rgb(18 18 22 / 0.92);
+  background: rgb(14 10 24 / 0.92);
   border: 1px solid var(--line);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
 }
 .bg-brand {
-  background: var(--accent);
+  background: linear-gradient(180deg, #6b3de0 0%, #4f27b5 100%);
   color: var(--accent-fg);
 }
 .glow {

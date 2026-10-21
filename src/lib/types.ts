@@ -61,9 +61,9 @@ export const INVESTMENT_TYPE_LABEL: Record<InvestmentType, string> = {
 };
 
 export const INVESTMENT_TYPE_COLOR: Record<InvestmentType, string> = {
-  renda_fixa: "#9b72ff",
-  acoes: "#46d99b",
-  fiis: "#f5b84a",
+  renda_fixa: "#7545e8",
+  acoes: "#3ccb8b",
+  fiis: "#f2b84b",
   cripto: "#ff8a5b",
   fundos: "#4aa8ff",
   outros: "#8b8b98",

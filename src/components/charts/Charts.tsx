@@ -462,7 +462,7 @@ export function CashflowBars({
                     {
                       height: `${h}%`,
                       "--i": i,
-                      background: on ? "linear-gradient(to bottom, var(--accent), rgb(155 114 255 / 0.18))" : undefined,
+                      background: on ? "linear-gradient(to bottom, var(--accent-strong), rgb(91 47 208 / 0.15))" : undefined,
                     } as CSSProperties
                   }
                 >
@@ -519,19 +519,30 @@ export function AccountBubbles({ items, selected, onSelect }: { items: Bubble[];
             <feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -10" />
           </filter>
           <radialGradient id={`${id}c`} cx="0.5" cy="0.9" r="0.9">
-            <stop offset="0" stopColor="#d9c8ff" />
-            <stop offset="1" stopColor="#9b72ff" />
+            <stop offset="0" stopColor="#9b7bf2" />
+            <stop offset="1" stopColor="#4f27b5" />
+          </radialGradient>
+          <radialGradient id={`${id}d`} cx="0.5" cy="0.9" r="0.9">
+            <stop offset="0" stopColor="#3a2a73" />
+            <stop offset="1" stopColor="#22154f" />
           </radialGradient>
         </defs>
         <g filter={`url(#${id}g)`}>
           {placed.map((p) => (
-            <circle key={p.item.id} cx={p.cx} cy={63} r={p.r} fill={p.center ? `url(#${id}c)` : "#26262c"} style={{ opacity: selected && selected !== p.item.id ? 0.4 : 1, transition: "opacity 250ms" }} />
+            // Nada de opacity aqui: o filtro "goo" corta alfa parcial e deforma as bolhas. Esmaecer = trocar a cor.
+            <circle
+              key={p.item.id}
+              cx={p.cx}
+              cy={63}
+              r={p.r}
+              fill={selected && selected !== p.item.id ? (p.center ? `url(#${id}d)` : "#120d20") : p.center ? `url(#${id}c)` : "#1f1736"}
+            />
           ))}
         </g>
         {selected &&
           placed
             .filter((p) => p.item.id === selected)
-            .map((p) => <circle key="ring" cx={p.cx} cy={63} r={p.r - 2} fill="none" stroke="#fff" strokeOpacity={0.85} strokeWidth={2} />)}
+            .map((p) => <circle key="ring" cx={p.cx} cy={63} r={p.r - 2} fill="none" stroke="#9b7bf2" strokeOpacity={0.95} strokeWidth={2} />)}
       </svg>
       {placed.map((p) => {
         const on = selected === p.item.id;
@@ -542,12 +553,12 @@ export function AccountBubbles({ items, selected, onSelect }: { items: Bubble[];
             aria-pressed={on}
             aria-label={`${p.item.label}: ${money(p.item.value)}. Toque para ${on ? "ver todas as contas" : "filtrar por esta conta"}`}
             onClick={() => onSelect?.(on ? null : p.item.id)}
-            className={`absolute top-1/2 h-[86%] w-[32%] -translate-x-1/2 -translate-y-1/2 rounded-full transition-transform duration-200 active:scale-95 ${p.center ? "text-[#0b0816]" : "text-fg"}`}
+            className={`absolute top-1/2 h-[86%] w-[32%] -translate-x-1/2 -translate-y-1/2 rounded-full transition-transform duration-200 active:scale-95 text-white`}
             style={{ left: `${(p.cx / 330) * 100}%` }}
           >
-            <span className="pop flex flex-col items-center text-center">
+            <span className={`pop flex flex-col items-center text-center transition-opacity duration-300 ${selected && !on ? "opacity-45" : ""}`}>
               <span className="num max-w-full whitespace-nowrap text-[13px] font-semibold min-[400px]:text-[14px] sm:text-[17px]">{money(p.item.value)}</span>
-              <span className={`max-w-full truncate text-[12px] ${p.center ? "opacity-70" : "text-muted"}`}>{p.item.label}</span>
+              <span className={`max-w-full truncate text-[12px] ${p.center ? "text-white/75" : "text-muted"}`}>{p.item.label}</span>
             </span>
           </button>
         );

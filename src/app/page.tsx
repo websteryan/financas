@@ -64,7 +64,7 @@ export default function ResumoPage() {
     })
     .sort((a, b) => b.pct - a.pct);
 
-  const donutItems = cats.length > 5 ? [...cats.slice(0, 4), { id: "outras", label: "Demais", color: "#6b6b78", value: cats.slice(4).reduce((a, c) => a + c.value, 0) }] : cats;
+  const donutItems = cats.length > 5 ? [...cats.slice(0, 4), { id: "outras", label: "Demais", color: "#5d5675", value: cats.slice(4).reduce((a, c) => a + c.value, 0) }] : cats;
 
   return (
     <div className="fade-in">
@@ -227,7 +227,7 @@ export default function ResumoPage() {
                 <div className="h-2.5 overflow-hidden rounded-full bg-white/[0.07]" role="progressbar" aria-valuenow={Math.min(100, r.pct)} aria-valuemin={0} aria-valuemax={100} aria-label={`${r.name}: ${r.pct}% do limite`}>
                   <div
                     className="grow-x h-full rounded-full"
-                    style={{ width: `${Math.min(100, r.pct)}%`, background: r.pct >= 100 ? "var(--expense)" : r.pct >= 80 ? "#f5b84a" : "var(--accent)" }}
+                    style={{ width: `${Math.min(100, r.pct)}%`, background: r.pct >= 100 ? "var(--expense)" : r.pct >= 80 ? "var(--warn)" : "var(--accent)" }}
                   />
                 </div>
               </li>
