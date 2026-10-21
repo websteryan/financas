@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
-import { Plus, Trash, WarningCircle } from "@/components/icons";
+import { Buildings, Briefcase, Coins, DotsThreeOutline, PiggyBank, Plus, Trash, TrendUp, WarningCircle } from "@/components/icons";
 import { Donut } from "@/components/charts/Charts";
 import { PageHeader, Panel } from "@/components/PageHeader";
 import { Button, Chip, Empty, Field, Sheet, Skeleton, inputClass, showToast } from "@/components/ui";
@@ -34,7 +34,7 @@ export default function InvestimentosPage() {
 
   return (
     <div className="fade-in">
-      <PageHeader title="Investimentos" month={false}>
+      <PageHeader title="Investimentos" month={false} newButton={false}>
         <Button variant="primary" className="h-11 px-4 text-sm" onClick={() => setDraft(emptyDraft())}>
           <Plus size={16} weight="bold" /> Novo
         </Button>
@@ -50,17 +50,17 @@ export default function InvestimentosPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-5 lg:gap-5">
-          <section className="bg-brand rise flex flex-col rounded-[28px] p-5 sm:p-7 lg:col-span-3">
-            <p className="text-[14px] font-medium opacity-70">Total investido</p>
+          <section className="card rise flex flex-col p-5 sm:p-7 lg:col-span-3">
+            <p className="text-[14px] font-medium text-muted">Total investido</p>
             {f.loading ? (
-              <Skeleton className="mt-2 h-12 w-56 bg-black/15" />
+              <Skeleton className="mt-2 h-12 w-56" />
             ) : (
               <p className="num font-display mt-1 text-[44px] font-semibold leading-none tracking-tight sm:text-[56px]">{money(shown)}</p>
             )}
-            <p className="mt-3 inline-flex rounded-ctl bg-black/15 px-3 py-1 text-[13px] font-medium">
+            <p className="mt-3 inline-flex self-start rounded-ctl bg-accent-soft px-3 py-1 text-[13px] font-medium text-accent-text">
               {list.length} {list.length === 1 ? "aplicação" : "aplicações"} em {byType.length} {byType.length === 1 ? "tipo" : "tipos"}
             </p>
-            <p className="mt-auto pt-5 text-[13px] opacity-70">Registro do que você aplicou. Valores não são atualizados pelo mercado.</p>
+            <p className="mt-auto pt-5 text-[13px] text-muted">Registro do que você aplicou. Valores não são atualizados pelo mercado.</p>
           </section>
 
           <Panel title="Distribuição" className="rise lg:col-span-2">
@@ -92,7 +92,7 @@ export default function InvestimentosPage() {
           {f.loading ? (
             <div className="flex flex-col gap-2.5">
               {[0, 1, 2].map((i) => (
-                <Skeleton key={i} className="h-[68px] rounded-[22px]" />
+                <Skeleton key={i} className="h-[68px] rounded-[16px]" />
               ))}
             </div>
           ) : list.length === 0 ? (
@@ -108,7 +108,7 @@ export default function InvestimentosPage() {
               />
             </div>
           ) : (
-            <div className="flex flex-col gap-2.5">
+            <div className="card divide-y divide-line overflow-hidden">
               {list.map((i, n) => (
                 <InvestmentRow key={i.id} inv={i} index={Math.min(n, 8)} onClick={() => setDraft({ id: i.id, name: i.name, type: i.type, institution: i.institution, cents: i.amount_cents, date: i.date })} />
               ))}
@@ -122,17 +122,20 @@ export default function InvestimentosPage() {
   );
 }
 
+const TYPE_ICON = { renda_fixa: PiggyBank, acoes: TrendUp, fiis: Buildings, cripto: Coins, fundos: Briefcase, outros: DotsThreeOutline } as const;
+
 function InvestmentRow({ inv, index, onClick }: { inv: Investment; index: number; onClick: () => void }) {
   const color = INVESTMENT_TYPE_COLOR[inv.type];
+  const Icon = TYPE_ICON[inv.type];
   return (
     <button
       type="button"
       onClick={onClick}
       style={{ "--i": index } as CSSProperties}
-      className="rise tile flex w-full items-center gap-3.5 rounded-[22px] px-3.5 py-3 text-left transition-[background-color,transform] hover:bg-surface-3 active:scale-[0.99]"
+      className="rise flex w-full items-center gap-3.5 bg-surface px-4 py-3 text-left transition-colors hover:bg-surface-2 active:bg-surface-2"
     >
-      <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-[15px] font-semibold" style={{ background: `${color}2b`, color }} aria-hidden>
-        {inv.name.charAt(0).toUpperCase()}
+      <span className="cat-glyph inline-flex size-11 shrink-0 items-center justify-center" style={{ "--c": color } as CSSProperties} aria-hidden>
+        <Icon size={20} weight="bold" />
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[16px] font-medium">{inv.name}</span>

@@ -482,19 +482,19 @@ function AccountsPanel({ spentBy, countBy, onEdit, onNew }: { spentBy: Map<strin
     <Panel
       title="Suas contas"
       action={
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {f.accounts.length > 1 &&
             (editing ? (
               <Button variant="primary" className="h-10 px-4 text-sm" onClick={finish} disabled={saving}>
                 {saving ? "Salvando..." : "Concluir"}
               </Button>
             ) : (
-              <Button className="h-10 px-3.5 text-sm" onClick={start}>
+              <Button className="h-9 px-3 text-[13px]" onClick={start}>
                 Reordenar
               </Button>
             ))}
           {!editing && (
-            <Button className="h-10 px-3.5 text-sm" onClick={onNew}>
+            <Button className="h-9 px-3 text-[13px]" onClick={onNew}>
               <Plus size={16} weight="bold" /> Nova
             </Button>
           )}

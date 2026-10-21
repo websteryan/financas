@@ -455,9 +455,9 @@ export function CashflowBars({
               onClick={() => onSelect(d.key)}
               className="group relative flex min-w-0 flex-1 flex-col items-center gap-2.5"
             >
-              <span className="relative flex w-full items-end rounded-full bg-white/[0.045]" style={{ height }}>
+              <span className="relative flex w-full items-end rounded-[var(--r-bar)] bg-white/[0.045]" style={{ height }}>
                 <span
-                  className={`grow-y relative block w-full rounded-full transition-[height] duration-500 ease-out ${on ? "" : "bg-white/[0.12] group-hover:bg-white/[0.2]"}`}
+                  className={`grow-y relative block w-full rounded-[var(--r-bar)] transition-[height] duration-500 ease-out ${on ? "" : "bg-white/[0.12] group-hover:bg-white/[0.2]"}`}
                   style={
                     {
                       height: `${h}%`,
