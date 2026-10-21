@@ -38,7 +38,7 @@ export function Panel({ title, action, children, className = "" }: { title?: str
   return (
     <section className={`card p-5 sm:p-6 ${className}`}>
       {(title || action) && (
-        <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
           {title && <h2 className="whitespace-nowrap text-[17px] font-medium">{title}</h2>}
           {action}
         </div>

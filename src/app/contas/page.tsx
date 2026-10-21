@@ -129,10 +129,10 @@ export default function ContasPage() {
           )}
           <div className="flex flex-wrap gap-2">
             <Button onClick={exportCsv} disabled={exporting}>
-              <DownloadSimple size={18} /> {exporting ? "Exportando..." : "Exportar planilha (CSV)"}
+              <DownloadSimple size={18} /> {exporting ? "Exportando..." : "Exportar CSV"}
             </Button>
             <Button variant="ghost" onClick={signOut}>
-              <SignOut size={18} /> {isCloud ? "Sair" : "Apagar dados de demonstração"}
+              <SignOut size={18} /> {isCloud ? "Sair" : "Apagar demonstração"}
             </Button>
           </div>
         </Panel>
@@ -515,7 +515,7 @@ function AccountsPanel({ spentBy, countBy, onEdit, onNew }: { spentBy: Map<strin
     <Panel
       title="Suas contas"
       action={
-        <div className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
           {f.accounts.length > 1 &&
             (editing ? (
               <Button variant="primary" className="h-10 px-4 text-sm" onClick={finish} disabled={saving}>

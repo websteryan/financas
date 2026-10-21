@@ -127,12 +127,12 @@ function TabLink({ href, label, icon: Icon, active }: (typeof NAV)[number] & { a
       title={label}
       aria-current={active ? "page" : undefined}
       className={`flex h-10 items-center justify-center rounded-full transition-[background-color,color,padding] duration-300 ease-[var(--ease-out)] active:scale-95 min-[400px]:h-11 ${
-        active ? "bg-brand px-3.5 text-[14px] font-semibold" : "tile size-10 text-muted hover:text-fg min-[400px]:size-11"
+        active ? "bg-brand px-3.5 text-[14px] font-semibold max-[359px]:size-10 max-[359px]:px-0" : "tile size-10 text-muted hover:text-fg min-[400px]:size-11"
       }`}
     >
       <Icon size={20} weight={active ? "fill" : "regular"} className="shrink-0" />
       <span
-        className={`overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-300 ease-[var(--ease-out)] ${
+        className={`overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-300 ease-[var(--ease-out)] max-[359px]:hidden ${
           active ? "ml-1.5 max-w-[110px] opacity-100" : "ml-0 max-w-0 opacity-0"
         }`}
       >

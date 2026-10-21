@@ -96,7 +96,7 @@ export default function ResumoPage() {
           )}
 
           <div className="card mt-5 p-4">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
               <p className="whitespace-nowrap text-[14px] font-medium text-muted">Resultado do mês</p>
               <MonthPicker value={f.month} onChange={f.setMonth} />
             </div>

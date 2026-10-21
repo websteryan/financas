@@ -25,10 +25,12 @@ export function Button({
   className = "",
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
+  // Sem tailwind-merge: altura, padding e tamanho de texto padrão só valem se o chamador não passar os seus.
+  const base = [/(^|\s)h-/.test(className) ? "" : "h-12", /(^|\s)px-/.test(className) ? "" : "px-5", /(^|\s)text-(\[|sm|xs|base|lg)/.test(className) ? "" : "text-[15px]"].join(" ");
   return (
     <button
       {...props}
-      className={`inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-ctl px-5 text-[15px] font-medium transition-[transform,background-color,filter] duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 ${variants[variant]} ${className}`}
+      className={`${base} inline-flex max-w-full items-center justify-center gap-2 whitespace-nowrap rounded-ctl font-medium transition-[transform,background-color,filter] duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 ${variants[variant]} ${className}`}
     />
   );
 }
@@ -163,7 +165,7 @@ export function MonthPicker({ value, onChange }: { value: YM; onChange: (m: YM) 
         type="button"
         onClick={() => onChange(now)}
         disabled={isNow}
-        className="min-w-[6.5rem] rounded-ctl px-2 py-1.5 text-center text-[15px] font-semibold text-fg disabled:cursor-default"
+        className="min-w-[5.5rem] rounded-ctl px-2 py-1.5 min-[380px]:min-w-[6.5rem] text-center text-[15px] font-semibold text-fg disabled:cursor-default"
         title={isNow ? undefined : "Voltar para o mês atual"}
       >
         {monthLabel(value)}
