@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { Check, Plus } from "./icons";
 import { AccountGlyph, Button, CategoryGlyph, Chip, Field, Segmented, Sheet, inputClass, showToast } from "./ui";
-import { dayLabel, money, moneyPlain } from "@/lib/format";
-import { nextDue, type PendingItem } from "@/lib/recurring";
+import { dayLabel, money, moneyPlain, shortDate } from "@/lib/format";
+import { nextDue, type Forecast, type PendingItem } from "@/lib/recurring";
 import { useFinance } from "@/lib/store";
 import { PAYMENT_LABEL, type Kind, type NewRecurringRule, type PaymentMethod, type RecurringRule } from "@/lib/types";
 
@@ -388,5 +388,52 @@ function RuleSheet({ draft, onClose }: { draft: Draft | null; onClose: () => voi
         <button type="submit" hidden />
       </form>
     </Sheet>
+  );
+}
+
+/** Uma linha discreta sob o saldo: "Previsão até o fim do mês". Toque abre a lista do que ainda vence. */
+export function ForecastLine({ forecast }: { forecast: Forecast }) {
+  const f = useFinance();
+  const [open, setOpen] = useState(false);
+  if (forecast.items.length === 0) return null;
+  const end = f.totalBalance + forecast.net;
+  const last = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-3 inline-flex max-w-full items-center gap-2 rounded-ctl bg-white/[0.05] px-3 py-1.5 text-[13px] text-muted transition-colors hover:bg-white/[0.08] active:bg-white/[0.08]"
+      >
+        <span className="truncate">Previsão dia {last}</span>
+        <span className={`num shrink-0 font-semibold ${end < 0 ? "text-expense" : "text-fg"}`}>{money(end)}</span>
+      </button>
+      <Sheet open={open} onClose={() => setOpen(false)} title="Previsão do mês">
+        <div className="flex flex-col gap-5">
+          <div>
+            <p className="text-[13px] text-muted">Saldo no fim do mês</p>
+            <p className={`num font-display mt-1 text-[36px] font-semibold leading-none ${end < 0 ? "text-expense" : ""}`}>{money(end)}</p>
+            <p className="mt-2 text-[13px] text-muted">Saldo de hoje mais o que ainda vence nas recorrentes.</p>
+          </div>
+          <ul className="divide-y divide-line">
+            <li className="flex items-center justify-between gap-3 py-3 text-[15px]">
+              <span className="text-muted">Saldo hoje</span>
+              <span className="num font-medium">{money(f.totalBalance)}</span>
+            </li>
+            {forecast.items.map((p) => (
+              <li key={`${p.rule.id}-${p.ym}`} className="flex items-center gap-3 py-3 text-[15px]">
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate">{p.rule.description}</span>
+                  <span className={`block text-[13px] ${p.overdue ? "text-expense" : "text-muted"}`}>{p.overdue ? "Atrasado, " : ""}{shortDate(p.due)}</span>
+                </span>
+                <span className={`num whitespace-nowrap font-medium ${p.rule.kind === "receita" ? "text-income" : ""}`}>
+                  {p.rule.kind === "receita" ? "+" : "-"} {money(p.rule.amount_cents)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </Sheet>
+    </>
   );
 }

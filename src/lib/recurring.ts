@@ -47,3 +47,24 @@ export function nextDue(rule: RecurringRule): string {
   if (k < rule.start_ym) k = rule.start_ym;
   return dueDate(k, rule.day);
 }
+
+export interface Forecast {
+  /** Vencimentos que ainda vão cair até o fim do mês (inclui os já vencidos e não confirmados). */
+  items: PendingItem[];
+  /** Efeito líquido desses vencimentos no saldo (receitas menos gastos). */
+  net: number;
+}
+
+/** Previsão até o fim do mês atual: pendentes de hoje para trás e recorrentes que vencem nos próximos dias. */
+export function forecastOf(rules: RecurringRule[], today = todayISO()): Forecast {
+  const nowKey = today.slice(0, 7);
+  const items = pendingOf(rules, today);
+  for (const rule of rules) {
+    if (!rule.active || rule.start_ym > nowKey || (rule.last_ym && rule.last_ym >= nowKey)) continue;
+    const due = dueDate(nowKey, rule.day);
+    if (due > today) items.push({ rule, ym: nowKey, due, overdue: false });
+  }
+  items.sort((a, b) => a.due.localeCompare(b.due));
+  const net = items.reduce((s, p) => s + (p.rule.kind === "receita" ? p.rule.amount_cents : -p.rule.amount_cents), 0);
+  return { items, net };
+}

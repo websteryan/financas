@@ -9,8 +9,9 @@ import { Panel } from "@/components/PageHeader";
 import { TransactionList } from "@/components/TransactionList";
 import { AccountGlyph, BigMoney, Button, IconButton, Empty, MonthPicker, Segmented, Skeleton } from "@/components/ui";
 import { NewButton } from "@/components/PageHeader";
-import { PendingBlock } from "@/components/Recurring";
+import { ForecastLine, PendingBlock } from "@/components/Recurring";
 import { Logo } from "@/components/Logo";
+import { forecastOf } from "@/lib/recurring";
 import { byCategory, monthlySeries, statBuckets, type StatMode } from "@/lib/derive";
 import { money } from "@/lib/format";
 import { useCountUp } from "@/lib/motion";
@@ -94,6 +95,7 @@ export default function ResumoPage() {
               <BigMoney cents={total} />
             </p>
           )}
+          {!f.loading && !accFilter && <ForecastLine forecast={forecastOf(f.rules)} />}
 
           <div className="card mt-5 p-4">
             <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
