@@ -89,7 +89,7 @@ export default function ContasPage() {
                       key={c.id}
                       type="button"
                       onClick={() => setCatDraft(c)}
-                      className="inline-flex h-11 items-center gap-2.5 rounded-full border border-line bg-surface pl-1.5 pr-4 text-sm text-fg transition-colors hover:bg-surface-2"
+                      className="inline-flex h-11 items-center gap-2.5 rounded-ctl border border-line bg-surface pl-1.5 pr-4 text-sm text-fg transition-colors hover:bg-surface-2"
                     >
                       <CategoryGlyph category={c} size={32} />
                       {c.name}

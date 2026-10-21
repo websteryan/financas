@@ -275,7 +275,7 @@ export function TransactionSheet() {
                 type="button"
                 onClick={() => setAccountId(a.id)}
                 aria-pressed={accountId === a.id}
-                className={`flex h-12 shrink-0 items-center gap-2.5 rounded-full border pl-2 pr-4 text-sm transition-colors ${
+                className={`flex h-12 shrink-0 items-center gap-2.5 rounded-ctl border pl-2 pr-4 text-sm transition-colors ${
                   accountId === a.id ? "border-accent/70 bg-accent-soft text-fg" : "border-line bg-surface text-muted hover:text-fg"
                 }`}
               >
@@ -301,7 +301,7 @@ export function TransactionSheet() {
 
         {canSplit && (
           <Field label="Parcelas">
-            <div className="flex items-center justify-between rounded-full border border-line bg-surface px-2 py-1.5">
+            <div className="flex items-center justify-between rounded-ctl border border-line bg-surface px-2 py-1.5">
               <button
                 type="button"
                 aria-label="Menos parcelas"

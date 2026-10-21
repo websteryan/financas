@@ -56,7 +56,7 @@ export default function LancamentosPage() {
           <input
             id="busca"
             type="search"
-            className={`${inputClass} rounded-full pl-11`}
+            className={`${inputClass} rounded-ctl pl-11`}
             placeholder="Buscar por descrição ou categoria"
             value={query}
             onChange={(e) => setQuery(e.target.value)}

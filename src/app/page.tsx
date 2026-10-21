@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowDownLeft, ArrowRight, ArrowUpRight, CaretDown, X } from "@/components/icons";
-import { AccountBubbles, CashflowBars, Donut, RankBars, type CashDatum } from "@/components/charts/Charts";
+import { ArrowDownLeft, ArrowRight, ArrowUpRight, CaretDown, Check, X } from "@/components/icons";
+import { CashflowBars, Donut, RankBars, type CashDatum } from "@/components/charts/Charts";
 import { DemoBanner } from "@/components/DemoBanner";
 import { Panel } from "@/components/PageHeader";
 import { TransactionList } from "@/components/TransactionList";
-import { BigMoney, Button, Empty, MonthPicker, Segmented, Skeleton } from "@/components/ui";
+import { AccountGlyph, BigMoney, Button, Empty, MonthPicker, Segmented, Skeleton } from "@/components/ui";
+import { NewButton } from "@/components/PageHeader";
 import { Logo } from "@/components/Logo";
 import { byCategory, monthlySeries, statBuckets, type StatMode } from "@/lib/derive";
 import { money } from "@/lib/format";
@@ -36,14 +37,7 @@ export default function ResumoPage() {
 
   const balance = useCountUp(t.balance);
 
-  const bubbles = f.accounts
-    .map((a) => {
-      const own = f.monthTx.filter((x) => x.account_id === a.id);
-      const tt = totals(own);
-      return { id: a.id, label: a.name, value: tt.balance, weight: tt.income + tt.expense };
-    })
-    .sort((x, y) => y.weight - x.weight)
-    .slice(0, 3);
+  const accRows = f.accounts.map((a) => ({ id: a.id, name: a.name, color: a.color, balance: totals(f.monthTx.filter((x) => x.account_id === a.id)).balance }));
 
   const buckets: CashDatum[] = (() => {
     if (tab === "economia") {
@@ -69,27 +63,28 @@ export default function ResumoPage() {
   return (
     <div className="fade-in">
       <DemoBanner />
-      <header className="mb-5 flex items-center gap-3 lg:mb-7">
-        <Logo size={40} className="lg:hidden" />
-        <div>
+      <header className="mb-6 flex items-center gap-3 lg:mb-8">
+        <Logo size={36} className="lg:hidden" />
+        <div className="min-w-0 flex-1">
           <p className="text-[14px] text-muted">{greeting()}</p>
           <h1 className="text-[26px] font-semibold leading-tight tracking-tight lg:text-[34px]">Olá, bem-vindo</h1>
         </div>
+        <NewButton />
       </header>
 
       {f.error && <p className="mb-4 rounded-[16px] bg-expense/10 px-4 py-3 text-sm text-expense">{f.error}</p>}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-5 lg:gap-5">
         {/* Saldo + contas */}
-        <section className="card rise p-5 sm:p-6 lg:col-span-3">
-          <div className="flex items-start justify-between gap-3">
-            <p className="whitespace-nowrap pt-2 text-[16px] font-medium">Saldo do mês</p>
+        <section className="rise lg:col-span-3">
+          <div className="flex items-center justify-between gap-3">
+            <p className="whitespace-nowrap text-[15px] font-medium text-muted">Saldo do mês</p>
             <MonthPicker value={f.month} onChange={f.setMonth} />
           </div>
           {f.loading ? (
-            <Skeleton className="mt-3 h-11 w-56" />
+            <Skeleton className="mt-3 h-12 w-56" />
           ) : (
-            <p className={`mt-3 text-[40px] leading-none tracking-tight sm:text-[48px] ${balance < 0 ? "text-expense" : ""}`}>
+            <p className={`mt-2 text-[44px] leading-none tracking-tight sm:text-[56px] ${balance < 0 ? "text-expense" : ""}`}>
               <BigMoney cents={balance} />
             </p>
           )}
@@ -102,36 +97,54 @@ export default function ResumoPage() {
             </p>
           )}
 
-          {accFilter && (
-            <button
-              type="button"
-              onClick={() => setAccFilter(null)}
-              className="pop tile mt-3 inline-flex h-8 items-center gap-1.5 rounded-full pl-3 pr-2.5 text-[13px] font-medium"
-            >
-              Só {f.accountById(accFilter)?.name ?? "conta"}
-              <X size={12} weight="bold" className="text-muted" />
-            </button>
-          )}
-          <div className="mt-5">
-            {f.loading ? <Skeleton className="h-[120px] rounded-[40px]" /> : bubbles.length > 0 ? <AccountBubbles items={bubbles} selected={accFilter} onSelect={setAccFilter} /> : null}
-          </div>
-
           <div className="mt-5 grid grid-cols-2 gap-2.5">
             <button
               type="button"
               onClick={() => f.openNew("receita")}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-line text-[15px] font-medium transition-[transform,background-color] hover:bg-surface-2 active:scale-[0.97]"
+              className="tile inline-flex h-11 items-center justify-center gap-2 rounded-ctl text-[15px] font-medium transition-[transform,background-color] hover:bg-surface-3 active:scale-[0.97]"
             >
               <ArrowDownLeft size={18} weight="bold" /> Nova receita
             </button>
             <button
               type="button"
               onClick={() => f.openNew("despesa")}
-              className="tile inline-flex h-12 items-center justify-center gap-2 rounded-full text-[15px] font-medium transition-[transform,background-color] hover:bg-white/10 active:scale-[0.97]"
+              className="bg-brand inline-flex h-11 items-center justify-center gap-2 rounded-ctl text-[15px] font-medium transition-[transform,filter] hover:brightness-110 active:scale-[0.97]"
             >
               <ArrowUpRight size={18} weight="bold" /> Novo gasto
             </button>
           </div>
+
+          <div className="mb-2 mt-7 flex items-center justify-between px-1">
+            <h2 className="text-[13px] font-medium text-muted">Contas</h2>
+            {accFilter && (
+              <button type="button" onClick={() => setAccFilter(null)} className="pop inline-flex items-center gap-1 text-[13px] font-medium text-accent-text">
+                Limpar filtro <X size={12} weight="bold" />
+              </button>
+            )}
+          </div>
+          {f.loading ? (
+            <Skeleton className="h-[132px] rounded-[16px]" />
+          ) : accRows.length === 0 ? null : (
+            <div className="card divide-y divide-line overflow-hidden">
+              {accRows.map((a) => {
+                const on = accFilter === a.id;
+                return (
+                  <button
+                    key={a.id}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => setAccFilter(on ? null : a.id)}
+                    className={`flex w-full items-center gap-3.5 px-4 py-3 text-left transition-colors hover:bg-surface-2 ${on ? "bg-surface-2" : ""}`}
+                  >
+                    <AccountGlyph color={a.color} size={40} />
+                    <span className="min-w-0 flex-1 truncate text-[16px] font-medium">{a.name}</span>
+                    <span className={`num text-[16px] font-semibold ${a.balance < 0 ? "text-expense" : ""}`}>{money(a.balance)}</span>
+                    <Check size={16} weight="bold" className={`shrink-0 text-accent-text transition-opacity ${on ? "opacity-100" : "opacity-0"}`} />
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </section>
 
         {/* Rosca de gastos */}
@@ -160,7 +173,7 @@ export default function ResumoPage() {
         <section className="card rise p-5 sm:p-6 lg:col-span-3">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-[17px] font-medium">Fluxo de caixa</h2>
-            <label className="tile relative inline-flex h-10 items-center rounded-full pl-4 pr-9 text-[14px] font-medium">
+            <label className="tile relative inline-flex h-10 items-center rounded-ctl pl-4 pr-9 text-[14px] font-medium">
               <span className="sr-only">Período</span>
               <select
                 value={mode}

@@ -57,7 +57,7 @@ export default function InvestimentosPage() {
             ) : (
               <p className="num font-display mt-1 text-[44px] font-semibold leading-none tracking-tight sm:text-[56px]">{money(shown)}</p>
             )}
-            <p className="mt-3 inline-flex rounded-full bg-black/15 px-3 py-1 text-[13px] font-medium">
+            <p className="mt-3 inline-flex rounded-ctl bg-black/15 px-3 py-1 text-[13px] font-medium">
               {list.length} {list.length === 1 ? "aplicação" : "aplicações"} em {byType.length} {byType.length === 1 ? "tipo" : "tipos"}
             </p>
             <p className="mt-auto pt-5 text-[13px] opacity-70">Registro do que você aplicou. Valores não são atualizados pelo mercado.</p>

@@ -63,13 +63,13 @@ export function TransactionRow({ tx, anim = "" , index = 0 }: { tx: Transaction;
   return (
     <div className={`grid transition-[grid-template-rows] duration-300 ease-[var(--ease-out)] ${leaving ? "grid-rows-[0fr]" : "grid-rows-[1fr]"}`}>
     <div className="min-h-0 overflow-hidden">
-    <div className="pb-2.5">
+    <div>
     <div className="relative">
     <div
       ref={bg}
       aria-hidden
       style={{ opacity: 0 }}
-      className="group/bg pointer-events-none absolute inset-0 flex items-center justify-between rounded-[22px] bg-accent-soft px-6 text-accent-text data-[side=del]:bg-expense/15 data-[side=del]:text-expense lg:hidden"
+      className="group/bg pointer-events-none absolute inset-0 flex items-center justify-between bg-accent-soft px-6 text-accent-text data-[side=del]:bg-expense/15 data-[side=del]:text-expense lg:hidden"
     >
       <PencilSimple size={20} weight="bold" className="opacity-0 group-data-[side=edit]/bg:opacity-100" />
       <Trash size={20} weight="bold" className="opacity-0 group-data-[side=del]/bg:opacity-100" />
@@ -83,7 +83,7 @@ export function TransactionRow({ tx, anim = "" , index = 0 }: { tx: Transaction;
       onPointerCancel={onUp}
       onClick={() => !moved.current && openEdit(tx)}
       style={{ "--i": index } as CSSProperties}
-      className={`${leaving ? "item-out" : anim} tile group relative flex w-full touch-pan-y items-center gap-3.5 rounded-[22px] px-3.5 py-3 text-left transition-[background-color,transform] hover:bg-surface-3 active:scale-[0.99]`}
+      className={`${leaving ? "item-out" : anim} group relative flex w-full touch-pan-y items-center gap-3.5 bg-surface px-4 py-3 text-left transition-[background-color,transform] hover:bg-surface-2 active:bg-surface-2`}
     >
       <CategoryGlyph category={cat} size={44} fallback={tx.description} />
       <span className="min-w-0 flex-1">
@@ -136,7 +136,7 @@ export function TransactionList({ items }: { items: Transaction[] }) {
                 </span>
               )}
             </header>
-            <div className="flex flex-col">
+            <div className="card divide-y divide-line overflow-hidden">
               {d.items.map((t) => (
                 <TransactionRow key={t.id} tx={t} anim={initial ? "rise" : fresh.has(t.id) ? "item-in" : ""} index={initial ? Math.min(n++, 8) : 0} />
               ))}

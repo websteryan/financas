@@ -28,7 +28,7 @@ export function Button({
   return (
     <button
       {...props}
-      className={`inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-full px-5 text-[15px] font-medium transition-[transform,background-color,filter] duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 ${variants[variant]} ${className}`}
+      className={`inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-ctl px-5 text-[15px] font-medium transition-[transform,background-color,filter] duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 ${variants[variant]} ${className}`}
     />
   );
 }
@@ -43,7 +43,7 @@ export function IconButton({
       aria-label={label}
       title={label}
       {...props}
-      className={`tile inline-flex size-10 shrink-0 items-center justify-center rounded-full text-fg/85 transition-[transform,background-color,color] duration-150 hover:bg-surface-3 hover:text-fg active:scale-95 ${className}`}
+      className={`tile inline-flex size-10 shrink-0 items-center justify-center rounded-ctl text-fg/85 transition-[transform,background-color,color] duration-150 hover:bg-surface-3 hover:text-fg active:scale-95 ${className}`}
     />
   );
 }
@@ -61,10 +61,10 @@ export function Segmented<T extends string>({
 }) {
   const idx = Math.max(0, options.findIndex((o) => o.value === value));
   return (
-    <div role="tablist" className={`tile relative grid rounded-full p-1 ${className}`} style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
+    <div role="tablist" className={`tile relative grid rounded-ctl p-1 ${className}`} style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
       <span
         aria-hidden
-        className="bg-brand absolute inset-y-1 left-1 rounded-full transition-transform duration-[380ms] ease-[var(--ease-out)] motion-reduce:transition-none"
+        className="bg-brand absolute inset-y-1 left-1 rounded-ctl transition-transform duration-[380ms] ease-[var(--ease-out)] motion-reduce:transition-none"
         style={{ width: `calc((100% - 0.5rem) / ${options.length})`, transform: `translateX(${idx * 100}%)` }}
       />
       {options.map((o) => (
@@ -74,7 +74,7 @@ export function Segmented<T extends string>({
           type="button"
           aria-selected={value === o.value}
           onClick={() => onChange(o.value)}
-          className={`relative z-10 h-11 min-w-0 truncate whitespace-nowrap rounded-full px-3 text-[15px] transition-colors duration-200 ${
+          className={`relative z-10 h-11 min-w-0 truncate whitespace-nowrap rounded-ctl px-3 text-[15px] transition-colors duration-200 ${
             value === o.value ? "font-semibold text-accent-fg" : "font-medium text-muted hover:text-fg"
           }`}
         >
@@ -98,7 +98,7 @@ export function Field({ label, htmlFor, children, hint }: { label: string; htmlF
 }
 
 export const inputClass =
-  "h-12 w-full rounded-[16px] border border-line bg-surface-2 px-4 text-fg placeholder:text-muted/70 outline-none transition-colors focus:border-accent";
+  "h-12 w-full rounded-field border border-line bg-surface-2 px-4 text-fg placeholder:text-muted/70 outline-none transition-colors focus:border-accent";
 
 export function Chip({
   active,
@@ -116,7 +116,7 @@ export function Chip({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`inline-flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-sm transition-colors ${
+      className={`inline-flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-ctl border px-4 text-sm transition-colors ${
         active ? "border-accent/70 bg-accent-soft text-fg" : "border-line bg-surface text-muted hover:text-fg"
       }`}
     >
@@ -155,7 +155,7 @@ export function MonthPicker({ value, onChange }: { value: YM; onChange: (m: YM) 
   const now = currentYM();
   const isNow = value.y === now.y && value.m === now.m;
   return (
-    <div className="tile flex items-center rounded-full p-1">
+    <div className="tile flex items-center rounded-ctl p-1">
       <IconButton label="Mês anterior" onClick={() => onChange(shiftYM(value, -1))} className="size-9 border-0 bg-none shadow-none">
         <CaretLeft size={16} weight="bold" />
       </IconButton>
@@ -163,7 +163,7 @@ export function MonthPicker({ value, onChange }: { value: YM; onChange: (m: YM) 
         type="button"
         onClick={() => onChange(now)}
         disabled={isNow}
-        className="min-w-[6.5rem] rounded-full px-2 py-1.5 text-center text-[15px] font-semibold text-fg disabled:cursor-default"
+        className="min-w-[6.5rem] rounded-ctl px-2 py-1.5 text-center text-[15px] font-semibold text-fg disabled:cursor-default"
         title={isNow ? undefined : "Voltar para o mês atual"}
       >
         {monthLabel(value)}
@@ -249,7 +249,7 @@ export function Sheet({
       <button aria-label="Fechar" className={`${closing ? "sheet-backdrop-out" : "sheet-backdrop"} absolute inset-0 bg-black/70 backdrop-blur-[4px]`} onClick={requestClose} />
       <div
         ref={panel}
-        className={`${closing ? "sheet-panel-out" : "sheet-panel"} relative flex max-h-[92dvh] w-full flex-col rounded-t-[28px] border border-line bg-sheet shadow-[0_-12px_60px_rgb(0_0_0/0.5)] sm:max-w-[460px] sm:rounded-[28px]`}
+        className={`${closing ? "sheet-panel-out" : "sheet-panel"} relative flex max-h-[92dvh] w-full flex-col rounded-t-sheet border border-line bg-sheet shadow-[0_-12px_60px_rgb(0_0_0/0.5)] sm:max-w-[460px] sm:rounded-sheet`}
       >
         <div className="touch-none sm:touch-auto" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
           <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-white/20 sm:hidden" />
@@ -308,7 +308,7 @@ export function Toaster() {
       <p
         key={msg.id}
         role="status"
-        className="toast glass pointer-events-auto flex items-center gap-2.5 rounded-full py-2.5 pl-2.5 pr-5 text-sm font-medium text-fg shadow-[0_8px_30px_rgb(0_0_0/0.5)]"
+        className="toast glass pointer-events-auto flex items-center gap-2.5 rounded-ctl py-2.5 pl-2.5 pr-5 text-sm font-medium text-fg shadow-[0_8px_30px_rgb(0_0_0/0.5)]"
       >
         <span className="pop bg-brand inline-flex size-6 items-center justify-center rounded-full">
           <Check size={14} weight="bold" />
@@ -317,7 +317,7 @@ export function Toaster() {
         {msg.action && (
           <button
             type="button"
-            className="-mr-2 ml-1 rounded-full px-3 py-1 font-semibold text-accent-text hover:bg-white/10"
+            className="-mr-2 ml-1 rounded-ctl px-3 py-1 font-semibold text-accent-text hover:bg-white/10"
             onClick={() => {
               msg.action?.onClick();
               setMsg(null);
