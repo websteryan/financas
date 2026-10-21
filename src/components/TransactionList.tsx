@@ -89,14 +89,16 @@ export function TransactionRow({ tx, anim = "" , index = 0 }: { tx: Transaction;
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[16px] font-medium text-fg">{tx.description}</span>
         <span className="block truncate text-[13px] text-muted">
-          {[
-            cat?.name ?? "Sem categoria",
-            acc?.name,
-            tx.kind === "despesa" ? PAYMENT_LABEL[methodOf(tx, acc)] : null,
-            tx.installments ? `${tx.installment}/${tx.installments}` : null,
-          ]
-            .filter(Boolean)
-            .join(" \u2022 ")}
+          {cat?.name ?? "Sem categoria"}
+          {acc && (
+            <>
+              {" \u2022 "}
+              <span className="mr-1 inline-block size-[7px] rounded-full align-[1px]" style={{ background: acc.color }} />
+              {acc.name}
+            </>
+          )}
+          {tx.kind === "despesa" && ` \u2022 ${PAYMENT_LABEL[methodOf(tx, acc)]}`}
+          {tx.installments ? ` \u2022 ${tx.installment}/${tx.installments}` : ""}
         </span>
       </span>
       <Amount tx={tx} className="text-[16px]" />

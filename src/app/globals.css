@@ -246,6 +246,12 @@ body::before {
   border: 1px solid var(--line);
   border-radius: var(--r-glyph);
 }
+/* Conta: a cor escolhida para a instituição aparece em qualquer tema */
+.acc-glyph {
+  background: color-mix(in srgb, var(--c) 17%, transparent);
+  color: var(--c);
+  border-radius: var(--r-glyph);
+}
 :root[data-theme="moderno"] .cat-glyph {
   background: color-mix(in srgb, var(--c) 17%, transparent);
   color: var(--c);

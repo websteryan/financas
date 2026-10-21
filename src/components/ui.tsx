@@ -130,7 +130,7 @@ export function Chip({
 export function AccountGlyph({ color, size = 36 }: { color: string; size?: number }) {
   const Icon = Bank;
   return (
-    <span className="cat-glyph inline-flex shrink-0 items-center justify-center" style={{ width: size, height: size, "--c": color } as CSSProperties}>
+    <span className="acc-glyph inline-flex shrink-0 items-center justify-center" style={{ width: size, height: size, "--c": color } as CSSProperties}>
       <Icon size={Math.round(size * 0.5)} weight="bold" />
     </span>
   );
