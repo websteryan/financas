@@ -33,6 +33,7 @@ interface Finance {
   deleteGroup: (groupId: string) => Promise<void>;
   saveAccount: (a: Omit<Account, "id"> & { id?: string }) => Promise<void>;
   deleteAccount: (id: string) => Promise<void>;
+  reorderAccounts: (ids: string[]) => Promise<void>;
   saveCategory: (c: Omit<Category, "id"> & { id?: string }) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   /** Ids em animação de saída (a linha desliza antes de sumir). */
@@ -164,6 +165,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         ),
       saveAccount: (a) => run(() => repo.saveAccount(a)),
       deleteAccount: (id) => run(() => repo.deleteAccount(id)),
+      reorderAccounts: (ids) => run(() => repo.reorderAccounts(ids)),
       saveCategory: (c) => run(() => repo.saveCategory(c)),
       deleteCategory: (id) => run(() => repo.deleteCategory(id)),
       budgets,

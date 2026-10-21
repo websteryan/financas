@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { CloudSlash, DownloadSimple, PencilSimple, Plus, SignOut } from "@/components/icons";
+import { useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { CaretDown, CaretUp, CloudSlash, DotsSixVertical, DownloadSimple, PencilSimple, Plus, SignOut } from "@/components/icons";
 import { PageHeader, Panel } from "@/components/PageHeader";
-import { AccountGlyph, Button, Field, Segmented, Sheet, Skeleton, inputClass } from "@/components/ui";
+import { AccountGlyph, Button, Field, IconButton, Segmented, Sheet, Skeleton, inputClass, showToast } from "@/components/ui";
 import { money } from "@/lib/format";
 import { repo } from "@/lib/repo";
 import { useFinance } from "@/lib/store";
@@ -63,46 +63,7 @@ export default function ContasPage() {
       <PageHeader title="Contas" month={false} />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-5">
-        <Panel
-          title="Suas contas"
-          action={
-            <Button className="h-10 px-4 text-sm" onClick={() => setAccDraft({ name: "", type: "credito", color: PALETTE[0] })}>
-              <Plus size={16} weight="bold" /> Nova
-            </Button>
-          }
-        >
-          {f.loading ? (
-            <div className="flex flex-col gap-3">
-              <Skeleton className="h-12" />
-              <Skeleton className="h-12" />
-            </div>
-          ) : f.accounts.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted">Crie uma conta para começar a lançar.</p>
-          ) : (
-            <ul className="-mx-2 flex flex-col">
-              {f.accounts.map((a) => (
-                <li key={a.id}>
-                  <button
-                    type="button"
-                    onClick={() => setAccDraft(a)}
-                    className="flex w-full items-center gap-3 rounded-[20px] px-2 py-2.5 text-left transition-colors hover:bg-surface-2"
-                  >
-                    <AccountGlyph type={a.type} color={a.color} />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[15px] font-medium">{a.name}</span>
-                      <span className="block text-[13px] text-muted">{ACCOUNT_TYPE_LABEL[a.type]}</span>
-                    </span>
-                    <span className="text-right">
-                      <span className="num block text-[15px] font-medium">{money(spentBy.get(a.id) ?? 0)}</span>
-                      <span className="block text-[12px] text-muted">gasto no mês</span>
-                    </span>
-                    <PencilSimple size={16} className="ml-1 text-muted" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Panel>
+        <AccountsPanel spentBy={spentBy} onEdit={setAccDraft} onNew={() => setAccDraft({ name: "", type: "credito", color: PALETTE[0] })} />
 
         <Panel
           title="Categorias"
@@ -373,5 +334,182 @@ function CategorySheet({ draft, onClose }: { draft: CategoryDraft | null; onClos
         <button type="submit" hidden />
       </form>
     </Sheet>
+  );
+}
+
+function AccountsPanel({ spentBy, onEdit, onNew }: { spentBy: Map<string, number>; onEdit: (a: Account) => void; onNew: () => void }) {
+  const f = useFinance();
+  const [editing, setEditing] = useState(false);
+  const [order, setOrder] = useState<string[]>([]);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const items = useRef(new Map<string, HTMLLIElement>());
+  const tops = useRef(new Map<string, number>());
+
+  const byId = new Map(f.accounts.map((a) => [a.id, a]));
+  const ids = editing ? order.filter((id) => byId.has(id)) : f.accounts.map((a) => a.id);
+  const list = ids.map((id) => byId.get(id)!).filter(Boolean);
+
+  // FLIP: quando a ordem muda, as linhas deslizam da posição antiga para a nova
+  useLayoutEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    items.current.forEach((el, id) => {
+      const top = el.getBoundingClientRect().top;
+      const prev = tops.current.get(id);
+      if (!reduce && prev !== undefined && Math.abs(prev - top) > 1 && id !== dragId) {
+        el.style.transition = "none";
+        el.style.transform = `translateY(${prev - top}px)`;
+        void el.offsetHeight;
+        el.style.transition = "transform 280ms cubic-bezier(0.16, 1, 0.3, 1)";
+        el.style.transform = "";
+      }
+      tops.current.set(id, top);
+    });
+  });
+
+  function start() {
+    setOrder(f.accounts.map((a) => a.id));
+    tops.current.clear();
+    setEditing(true);
+  }
+  async function finish() {
+    const changed = order.join() !== f.accounts.map((a) => a.id).join();
+    if (changed) {
+      setSaving(true);
+      try {
+        await f.reorderAccounts(order);
+        showToast("Ordem salva");
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Não foi possível salvar a ordem.");
+      }
+      setSaving(false);
+    }
+    setEditing(false);
+  }
+  function move(id: string, to: number) {
+    setOrder((o) => {
+      const from = o.indexOf(id);
+      if (from < 0 || to < 0 || to >= o.length || from === to) return o;
+      const next = [...o];
+      next.splice(from, 1);
+      next.splice(to, 0, id);
+      return next;
+    });
+  }
+  function dragMove(e: ReactPointerEvent) {
+    if (!dragId) return;
+    // posição alvo = quantas outras linhas têm o centro acima do ponteiro
+    let target = 0;
+    for (const id of order) {
+      if (id === dragId) continue;
+      const el = items.current.get(id);
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      if (e.clientY > r.top + r.height / 2) target++;
+    }
+    move(dragId, target);
+  }
+
+  return (
+    <Panel
+      title="Suas contas"
+      action={
+        <div className="flex items-center gap-2">
+          {f.accounts.length > 1 &&
+            (editing ? (
+              <Button variant="primary" className="h-10 px-4 text-sm" onClick={finish} disabled={saving}>
+                {saving ? "Salvando..." : "Concluir"}
+              </Button>
+            ) : (
+              <Button className="h-10 px-4 text-sm" onClick={start}>
+                Reordenar
+              </Button>
+            ))}
+          {!editing && (
+            <Button className="h-10 px-4 text-sm" onClick={onNew}>
+              <Plus size={16} weight="bold" /> Nova
+            </Button>
+          )}
+        </div>
+      }
+    >
+      {f.loading ? (
+        <div className="flex flex-col gap-3">
+          <Skeleton className="h-12" />
+          <Skeleton className="h-12" />
+        </div>
+      ) : list.length === 0 ? (
+        <p className="py-6 text-center text-sm text-muted">Crie uma conta para começar a lançar.</p>
+      ) : (
+        <>
+          {editing && <p className="mb-2 text-[13px] text-muted">Arraste pela alça ou use as setas. Toque em Concluir para salvar.</p>}
+          <ul className="-mx-2 flex flex-col">
+            {list.map((a, i) => {
+              const dragging = dragId === a.id;
+              return (
+                <li
+                  key={a.id}
+                  ref={(el) => {
+                    if (el) items.current.set(a.id, el);
+                    else items.current.delete(a.id);
+                  }}
+                  className={`relative rounded-[20px] transition-[background-color,box-shadow] duration-200 ${dragging ? "z-10 bg-surface-3 shadow-[0_12px_32px_rgb(0_0_0/0.5)]" : ""}`}
+                >
+                  <div className="flex w-full items-center gap-3 rounded-[20px] px-2 py-2.5">
+                    {editing && (
+                      <span
+                        role="button"
+                        aria-label={`Arrastar ${a.name}`}
+                        className="-ml-1 inline-flex size-9 shrink-0 cursor-grab touch-none items-center justify-center rounded-full text-muted active:cursor-grabbing"
+                        onPointerDown={(e) => {
+                          e.currentTarget.setPointerCapture(e.pointerId);
+                          setDragId(a.id);
+                        }}
+                        onPointerMove={dragMove}
+                        onPointerUp={() => setDragId(null)}
+                        onPointerCancel={() => setDragId(null)}
+                      >
+                        <DotsSixVertical size={20} weight="bold" />
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      disabled={editing}
+                      onClick={() => onEdit(a)}
+                      className={`flex min-w-0 flex-1 items-center gap-3 rounded-[16px] text-left transition-colors ${editing ? "" : "hover:bg-surface-2"}`}
+                    >
+                      <AccountGlyph type={a.type} color={a.color} />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[15px] font-medium">{a.name}</span>
+                        <span className="block text-[13px] text-muted">{ACCOUNT_TYPE_LABEL[a.type]}</span>
+                      </span>
+                      {!editing && (
+                        <>
+                          <span className="text-right">
+                            <span className="num block text-[15px] font-medium">{money(spentBy.get(a.id) ?? 0)}</span>
+                            <span className="block text-[12px] text-muted">gasto no mês</span>
+                          </span>
+                          <PencilSimple size={16} className="ml-1 text-muted" />
+                        </>
+                      )}
+                    </button>
+                    {editing && (
+                      <span className="flex shrink-0 gap-1">
+                        <IconButton label={`Subir ${a.name}`} className="size-9" disabled={i === 0} onClick={() => move(a.id, i - 1)}>
+                          <CaretUp size={16} weight="bold" />
+                        </IconButton>
+                        <IconButton label={`Descer ${a.name}`} className="size-9" disabled={i === list.length - 1} onClick={() => move(a.id, i + 1)}>
+                          <CaretDown size={16} weight="bold" />
+                        </IconButton>
+                      </span>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      )}
+    </Panel>
   );
 }

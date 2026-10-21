@@ -7,6 +7,8 @@ export interface Repo {
   listAccounts(): Promise<Account[]>;
   saveAccount(a: Omit<Account, "id"> & { id?: string }): Promise<void>;
   deleteAccount(id: string): Promise<void>;
+  /** Define a ordem das contas (ids na ordem desejada). */
+  reorderAccounts(ids: string[]): Promise<void>;
   listCategories(): Promise<Category[]>;
   saveCategory(c: Omit<Category, "id"> & { id?: string }): Promise<void>;
   deleteCategory(id: string): Promise<void>;
@@ -44,6 +46,13 @@ const cloudRepo: Repo = {
   },
   async deleteAccount(id) {
     check(await supabaseBrowser().from("accounts").delete().eq("id", id));
+  },
+  async reorderAccounts(ids) {
+    // A ordem vem de created_at; redistribuímos os mesmos carimbos na nova ordem (sem mudar o schema).
+    const sb = supabaseBrowser();
+    const rows = check(await sb.from("accounts").select("id,created_at").in("id", ids));
+    const stamps = rows.map((r) => r.created_at as string).sort();
+    await Promise.all(ids.map((id, i) => sb.from("accounts").update({ created_at: stamps[i] }).eq("id", id).then(check)));
   },
   async listCategories() {
     const sb = supabaseBrowser();
@@ -258,6 +267,13 @@ const localRepo: Repo = {
     mutate((db) => {
       db.accounts = db.accounts.filter((x) => x.id !== id);
       db.transactions = db.transactions.filter((t) => t.account_id !== id);
+    });
+  },
+  async reorderAccounts(ids) {
+    mutate((db) => {
+      const byId = new Map(db.accounts.map((a) => [a.id, a]));
+      const ordered = ids.map((id) => byId.get(id)).filter((a): a is Account => Boolean(a));
+      db.accounts = [...ordered, ...db.accounts.filter((a) => !ids.includes(a.id))];
     });
   },
   async listCategories() {

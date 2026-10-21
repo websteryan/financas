@@ -29,5 +29,7 @@ export {
   CalendarBlank,
   GoogleLogo,
   ChartLineUp,
+  DotsSixVertical,
+  CaretUp,
   CaretDown,
 } from "@phosphor-icons/react";
