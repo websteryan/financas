@@ -48,7 +48,7 @@ export function PendingBlock() {
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[16px] font-medium">{r.description}</span>
                   <span className={`block truncate text-[13px] ${p.overdue ? "text-warn" : "text-muted"}`}>
-                    {p.overdue ? `Atrasado, venceu ${dayLabel(p.due).toLowerCase()}` : "Vence hoje"} {"•"} {f.accountById(r.account_id)?.name}
+                    {p.overdue ? `Venceu dia ${Number(p.due.slice(8))}` : "Vence hoje"} {"•"} {f.accountById(r.account_id)?.name}
                   </span>
                 </span>
                 <span className={`num whitespace-nowrap text-[16px] font-semibold ${r.kind === "receita" ? "text-income" : ""}`}>
