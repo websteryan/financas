@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button, showToast } from "./ui";
-import { disablePush, enablePush, pushState, type PushState } from "@/lib/push";
+import { disablePush, enablePush, pushState, sendTestPush, type PushState } from "@/lib/push";
 
 const TEXT: Record<PushState, string> = {
   on: "Ativados neste aparelho. Você recebe um aviso às 9h no dia do vencimento e enquanto houver pendências.",
@@ -39,13 +39,31 @@ export function PushPanel() {
     setBusy(false);
   }
 
+  async function test() {
+    setBusy(true);
+    try {
+      const r = await sendTestPush();
+      showToast(r.sent > 0 ? "Teste enviado, confira a notificação" : "Nenhum aparelho cadastrado. Desative e ative de novo.");
+    } catch {
+      showToast("Não foi possível enviar o teste.");
+    }
+    setBusy(false);
+  }
+
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
       <p className="min-w-0 flex-1 basis-56 text-[14px] text-muted">{TEXT[state]}</p>
       {can && (
-        <Button variant={state === "on" ? "secondary" : "primary"} className="h-11 shrink-0 px-4 text-sm" onClick={toggle} disabled={busy}>
-          {state === "on" ? "Desativar" : "Ativar lembretes"}
-        </Button>
+        <div className="flex shrink-0 flex-wrap gap-2">
+          {state === "on" && (
+            <Button className="h-11 px-4 text-sm" onClick={test} disabled={busy}>
+              Enviar teste
+            </Button>
+          )}
+          <Button variant={state === "on" ? "secondary" : "primary"} className="h-11 px-4 text-sm" onClick={toggle} disabled={busy}>
+            {state === "on" ? "Desativar" : "Ativar lembretes"}
+          </Button>
+        </div>
       )}
     </div>
   );

@@ -22,10 +22,38 @@ function dueDate(ym: string, day: number) {
 }
 const brl = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+const CORS = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
+};
+const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { ...CORS, "content-type": "application/json" } });
+
 Deno.serve(async (req) => {
-  if (req.headers.get("x-cron-secret") !== Deno.env.get("CRON_SECRET")) return new Response("forbidden", { status: 403 });
-  webpush.setVapidDetails("mailto:claudeescritorio26@gmail.com", VAPID_PUBLIC, Deno.env.get("VAPID_PRIVATE")!);
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  webpush.setVapidDetails("mailto:claudeescritorio26@gmail.com", VAPID_PUBLIC, Deno.env.get("VAPID_PRIVATE")!);
+
+  // Teste: o próprio usuário (logado) manda uma notificação de teste para seus aparelhos.
+  if (req.headers.get("x-cron-secret") !== Deno.env.get("CRON_SECRET")) {
+    const token = (req.headers.get("authorization") ?? "").replace(/^Bearer /i, "");
+    const { data: u } = token ? await sb.auth.getUser(token) : { data: { user: null } };
+    if (!u.user) return json({ error: "forbidden" }, 403);
+    const { data: mine } = await sb.from("push_subscriptions").select("endpoint,p256dh,auth").eq("user_id", u.user.id);
+    let ok = 0;
+    for (const s of mine ?? []) {
+      try {
+        await webpush.sendNotification(
+          { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+          JSON.stringify({ title: "Lastro", body: "Teste: os lembretes estão funcionando.", tag: "teste", url: "/" }),
+        );
+        ok++;
+      } catch (e) {
+        const code = (e as { statusCode?: number }).statusCode;
+        if (code === 404 || code === 410) await sb.from("push_subscriptions").delete().eq("endpoint", s.endpoint);
+      }
+    }
+    return json({ sent: ok, devices: (mine ?? []).length });
+  }
 
   const { data: subs } = await sb.from("push_subscriptions").select("endpoint,p256dh,auth,tz,user_id");
   let sent = 0;
@@ -70,5 +98,5 @@ Deno.serve(async (req) => {
       if (code === 404 || code === 410) await sb.from("push_subscriptions").delete().eq("endpoint", s.endpoint);
     }
   }
-  return new Response(JSON.stringify({ sent }), { headers: { "content-type": "application/json" } });
+  return json({ sent });
 });

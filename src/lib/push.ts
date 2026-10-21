@@ -1,5 +1,6 @@
 import { repo } from "./repo";
 import { isCloud } from "./supabase/config";
+import { supabaseBrowser } from "./supabase/client";
 
 /** Chave pública VAPID (a privada fica só nos segredos da função no Supabase). */
 const VAPID_PUBLIC = "BAEBl2ASI_oneAy1ZXFHc9Ws8oPLI7nfJYkDk2r2ls_7XGEpUoTdyLvr27ItcMbkR2evXE33OmNaf50lglWTdoo";
@@ -58,4 +59,11 @@ export async function disablePush(): Promise<PushState> {
     await sub.unsubscribe();
   }
   return "off";
+}
+
+/** Pede ao servidor que mande uma notificação de teste para os aparelhos do usuário. */
+export async function sendTestPush(): Promise<{ sent: number; devices: number }> {
+  const { data, error } = await supabaseBrowser().functions.invoke("lembretes", { body: { test: true } });
+  if (error) throw new Error(error.message);
+  return data as { sent: number; devices: number };
 }
