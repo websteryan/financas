@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Minus, Plus, Trash } from "./icons";
-import { AccountGlyph, Button, Chip, Field, Segmented, Sheet, inputClass, showToast } from "./ui";
+import { AccountGlyph, Button, Chip, Field, MethodIcon, Segmented, Sheet, inputClass, showToast } from "./ui";
 import { addMonthsISO, money, splitCents, todayISO, uid } from "@/lib/format";
 import { useFinance } from "@/lib/store";
-import type { Kind, NewTransaction } from "@/lib/types";
+import { PAYMENT_LABEL, methodOf, type Kind, type NewTransaction, type PaymentMethod } from "@/lib/types";
 
 const LAST_ACCOUNT = "financas-ultima-conta";
+const LAST_METHOD = "financas-ultima-forma";
+const METHODS = Object.keys(PAYMENT_LABEL) as PaymentMethod[];
 
 function yesterdayISO() {
   const d = new Date();
@@ -25,6 +27,7 @@ export function TransactionSheet() {
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [accountId, setAccountId] = useState<string>("");
+  const [method, setMethod] = useState<PaymentMethod>("debito");
   const [date, setDate] = useState(todayISO());
   const [parcelas, setParcelas] = useState(1);
   const [saving, setSaving] = useState(false);
@@ -47,16 +50,21 @@ export function TransactionSheet() {
       setDescription(tx.description);
       setCategoryId(tx.category_id);
       setAccountId(tx.account_id);
+      setMethod(methodOf(tx, accountsRef.current.find((a) => a.id === tx.account_id)));
       setDate(tx.date);
       setParcelas(1);
     } else {
       let last = "";
+      let lastMethod: PaymentMethod = "debito";
       try {
         last = localStorage.getItem(LAST_ACCOUNT) ?? "";
+        const m = localStorage.getItem(LAST_METHOD) as PaymentMethod | null;
+        if (m && METHODS.includes(m)) lastMethod = m;
       } catch {
         /* ignora */
       }
       setKind(sheet.kind ?? "despesa");
+      setMethod(lastMethod);
       setCents(0);
       setDescription("");
       setCategoryId(null);
@@ -70,7 +78,7 @@ export function TransactionSheet() {
 
   const kindCategories = useMemo(() => categories.filter((c) => c.kind === kind), [categories, kind]);
   const account = accounts.find((a) => a.id === accountId);
-  const canSplit = !editing && kind === "despesa" && account?.type === "credito";
+  const canSplit = !editing && kind === "despesa" && method === "credito";
   const n = canSplit ? parcelas : 1;
   const parts = useMemo(() => splitCents(cents, n), [cents, n]);
 
@@ -88,6 +96,7 @@ export function TransactionSheet() {
     const desc = description.trim() || cat?.name || (kind === "despesa" ? "Gasto" : "Receita");
     try {
       localStorage.setItem(LAST_ACCOUNT, accountId);
+      if (kind === "despesa") localStorage.setItem(LAST_METHOD, method);
     } catch {
       /* ignora */
     }
@@ -99,6 +108,7 @@ export function TransactionSheet() {
           description: desc,
           category_id: categoryId,
           account_id: accountId,
+          method: kind === "despesa" ? method : null,
           date,
         });
       } else {
@@ -110,6 +120,7 @@ export function TransactionSheet() {
           date: addMonthsISO(date, i),
           account_id: accountId,
           category_id: categoryId,
+          method: kind === "despesa" ? method : null,
           group_id: group,
           installment: n > 1 ? i + 1 : null,
           installments: n > 1 ? n : null,
@@ -256,7 +267,7 @@ export function TransactionSheet() {
           </div>
         </Field>
 
-        <Field label={kind === "despesa" ? "Pago com" : "Recebido em"}>
+        <Field label={kind === "despesa" ? "Conta" : "Recebido em"}>
           <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5">
             {accounts.map((a) => (
               <button
@@ -268,12 +279,25 @@ export function TransactionSheet() {
                   accountId === a.id ? "border-accent/70 bg-accent-soft text-fg" : "border-line bg-surface text-muted hover:text-fg"
                 }`}
               >
-                <AccountGlyph type={a.type} color={a.color} size={30} />
+                <AccountGlyph color={a.color} size={30} />
                 <span className="whitespace-nowrap font-medium">{a.name}</span>
               </button>
             ))}
           </div>
         </Field>
+
+        {kind === "despesa" && (
+          <Field label="Forma de pagamento">
+            <div className="flex flex-wrap gap-2">
+              {METHODS.map((m) => (
+                <Chip key={m} active={method === m} onClick={() => setMethod(m)}>
+                  <MethodIcon method={m} size={16} />
+                  {PAYMENT_LABEL[m]}
+                </Chip>
+              ))}
+            </div>
+          </Field>
+        )}
 
         {canSplit && (
           <Field label="Parcelas">

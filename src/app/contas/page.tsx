@@ -8,7 +8,7 @@ import { money } from "@/lib/format";
 import { repo } from "@/lib/repo";
 import { useFinance } from "@/lib/store";
 import { isCloud } from "@/lib/supabase/config";
-import { ACCOUNT_TYPE_LABEL, PALETTE, type Account, type AccountType, type Category, type Kind } from "@/lib/types";
+import { PAYMENT_LABEL, PALETTE, methodOf, type Account, type Category, type Kind } from "@/lib/types";
 
 type AccountDraft = Omit<Account, "id"> & { id?: string };
 type CategoryDraft = Omit<Category, "id"> & { id?: string };
@@ -19,6 +19,8 @@ export default function ContasPage() {
   const [catDraft, setCatDraft] = useState<CategoryDraft | null>(null);
   const [exporting, setExporting] = useState(false);
 
+  const countBy = new Map<string, number>();
+  for (const t of f.monthTx) countBy.set(t.account_id, (countBy.get(t.account_id) ?? 0) + 1);
   const spentBy = new Map<string, number>();
   for (const t of f.monthTx) if (t.kind === "despesa") spentBy.set(t.account_id, (spentBy.get(t.account_id) ?? 0) + t.amount_cents);
 
@@ -28,7 +30,7 @@ export default function ContasPage() {
       const all = await repo.listAllTransactions();
       const esc = (s: string) => `"${s.replace(/"/g, '""')}"`;
       const lines = [
-        ["Data", "Tipo", "Descrição", "Categoria", "Conta", "Parcela", "Valor"].join(";"),
+        ["Data", "Tipo", "Descrição", "Categoria", "Conta", "Forma", "Parcela", "Valor"].join(";"),
         ...all.map((t) =>
           [
             t.date.split("-").reverse().join("/"),
@@ -36,6 +38,7 @@ export default function ContasPage() {
             esc(t.description),
             esc(f.categoryById(t.category_id)?.name ?? ""),
             esc(f.accountById(t.account_id)?.name ?? ""),
+            t.kind === "despesa" ? PAYMENT_LABEL[methodOf(t, f.accountById(t.account_id))] : "",
             t.installments ? `${t.installment}/${t.installments}` : "",
             ((t.kind === "despesa" ? -1 : 1) * t.amount_cents / 100).toFixed(2).replace(".", ","),
           ].join(";"),
@@ -63,7 +66,7 @@ export default function ContasPage() {
       <PageHeader title="Contas" month={false} />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-5">
-        <AccountsPanel spentBy={spentBy} onEdit={setAccDraft} onNew={() => setAccDraft({ name: "", type: "credito", color: PALETTE[0] })} />
+        <AccountsPanel spentBy={spentBy} countBy={countBy} onEdit={setAccDraft} onNew={() => setAccDraft({ name: "", type: "debito", color: PALETTE[0] })} />
 
         <Panel
           title="Categorias"
@@ -219,18 +222,11 @@ function AccountSheet({ draft, onClose }: { draft: AccountDraft | null; onClose:
             onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
         </Field>
-        <Field label="Tipo">
-          <Segmented<AccountType>
-            value={form.type}
-            onChange={(type) => setForm({ ...form, type })}
-            options={(Object.keys(ACCOUNT_TYPE_LABEL) as AccountType[]).map((v) => ({ value: v, label: ACCOUNT_TYPE_LABEL[v] }))}
-          />
-        </Field>
         <Field label="Cor">
           <ColorPicker value={form.color} onChange={(color) => setForm({ ...form, color })} />
         </Field>
         <div className="flex items-center gap-3 rounded-[20px] bg-surface-2 p-3">
-          <AccountGlyph type={form.type} color={form.color} />
+          <AccountGlyph color={form.color} />
           <span className="text-[15px] font-medium">{form.name || "Nome da conta"}</span>
         </div>
         <button type="submit" hidden />
@@ -337,7 +333,7 @@ function CategorySheet({ draft, onClose }: { draft: CategoryDraft | null; onClos
   );
 }
 
-function AccountsPanel({ spentBy, onEdit, onNew }: { spentBy: Map<string, number>; onEdit: (a: Account) => void; onNew: () => void }) {
+function AccountsPanel({ spentBy, countBy, onEdit, onNew }: { spentBy: Map<string, number>; countBy: Map<string, number>; onEdit: (a: Account) => void; onNew: () => void }) {
   const f = useFinance();
   const [editing, setEditing] = useState(false);
   const [order, setOrder] = useState<string[]>([]);
@@ -421,12 +417,12 @@ function AccountsPanel({ spentBy, onEdit, onNew }: { spentBy: Map<string, number
                 {saving ? "Salvando..." : "Concluir"}
               </Button>
             ) : (
-              <Button className="h-10 px-4 text-sm" onClick={start}>
+              <Button className="h-10 px-3.5 text-sm" onClick={start}>
                 Reordenar
               </Button>
             ))}
           {!editing && (
-            <Button className="h-10 px-4 text-sm" onClick={onNew}>
+            <Button className="h-10 px-3.5 text-sm" onClick={onNew}>
               <Plus size={16} weight="bold" /> Nova
             </Button>
           )}
@@ -478,10 +474,10 @@ function AccountsPanel({ spentBy, onEdit, onNew }: { spentBy: Map<string, number
                       onClick={() => onEdit(a)}
                       className={`flex min-w-0 flex-1 items-center gap-3 rounded-[16px] text-left transition-colors ${editing ? "" : "hover:bg-surface-2"}`}
                     >
-                      <AccountGlyph type={a.type} color={a.color} />
+                      <AccountGlyph color={a.color} />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[15px] font-medium">{a.name}</span>
-                        <span className="block text-[13px] text-muted">{ACCOUNT_TYPE_LABEL[a.type]}</span>
+                        <span className="block truncate text-[13px] text-muted">{countBy.get(a.id) ?? 0} {(countBy.get(a.id) ?? 0) === 1 ? "lançamento" : "lançamentos"}</span>
                       </span>
                       {!editing && (
                         <>

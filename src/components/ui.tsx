@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type ButtonHTMLAttributes, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { Bank, Check, CaretLeft, CaretRight, CreditCard, Money, PixLogo, X } from "./icons";
 import { currentYM, money, monthLabel, shiftYM, type YM } from "@/lib/format";
-import type { AccountType } from "@/lib/types";
+import type { PaymentMethod } from "@/lib/types";
 
 /*
  * Sistema de forma: cartões 24px, blocos internos 18px, controles em pílula
@@ -125,8 +125,9 @@ export function Chip({
   );
 }
 
-export function AccountGlyph({ type, color, size = 36 }: { type: AccountType; color: string; size?: number }) {
-  const Icon = type === "credito" ? CreditCard : type === "pix" ? PixLogo : type === "dinheiro" ? Money : Bank;
+/** Ícone de uma conta (instituição). A forma de pagamento é por lançamento: veja MethodIcon. */
+export function AccountGlyph({ color, size = 36 }: { color: string; size?: number }) {
+  const Icon = Bank;
   return (
     <span
       className="inline-flex shrink-0 items-center justify-center rounded-full"
@@ -336,4 +337,9 @@ export function BigMoney({ cents, className = "" }: { cents: number; className?:
       <span className="font-medium text-muted">{dec}</span>
     </span>
   );
+}
+
+export function MethodIcon({ method, size = 18 }: { method: PaymentMethod; size?: number }) {
+  const Icon = method === "credito" ? CreditCard : method === "pix" ? PixLogo : method === "dinheiro" ? Money : Bank;
+  return <Icon size={size} weight="bold" />;
 }

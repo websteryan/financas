@@ -144,7 +144,7 @@ body::before {
 
 @media (prefers-reduced-motion: no-preference) {
   .fade-in {
-    animation: fade-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: fade-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
 }
 
@@ -162,10 +162,10 @@ body::before {
 /* Painel de lançamento: sobe no celular, aparece suave no computador */
 @media (prefers-reduced-motion: no-preference) {
   .sheet-backdrop {
-    animation: backdrop-in 0.2s ease-out both;
+    animation: backdrop-in 0.2s ease-out backwards;
   }
   .sheet-panel {
-    animation: sheet-up 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: sheet-up 0.38s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
   @media (min-width: 640px) {
     .sheet-panel {
@@ -237,31 +237,31 @@ body::before {
   }
 }
 .toast {
-  animation: toast-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: toast-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
 /* Movimento: entrada escalonada, pulso de sucesso e crescimento de barras */
 @media (prefers-reduced-motion: no-preference) {
   .rise {
-    animation: rise 0.5s var(--ease-out) both;
+    animation: rise 0.5s var(--ease-out) backwards;
     animation-delay: calc(var(--i, 0) * 55ms);
   }
   .pop {
-    animation: pop 0.45s var(--ease-spring) both;
+    animation: pop 0.45s var(--ease-spring) backwards;
   }
   .grow-y {
     transform-box: fill-box;
     transform-origin: bottom;
-    animation: grow-y 0.7s var(--ease-out) both;
+    animation: grow-y 0.7s var(--ease-out) backwards;
     animation-delay: calc(var(--i, 0) * 45ms + 120ms);
   }
   .grow-x {
     transform-origin: left;
-    animation: grow-x 0.8s var(--ease-out) both;
+    animation: grow-x 0.8s var(--ease-out) backwards;
     animation-delay: calc(var(--i, 0) * 60ms + 120ms);
   }
   .item-in {
-    animation: item-in 0.45s var(--ease-spring) both;
+    animation: item-in 0.45s var(--ease-spring) backwards;
   }
 }
 @keyframes rise {
@@ -296,7 +296,7 @@ body::before {
 /* Rosca: cada fatia se desenha em sequência */
 @media (prefers-reduced-motion: no-preference) {
   .donut-seg {
-    animation: donut-seg 0.9s var(--ease-out) both;
+    animation: donut-seg 0.9s var(--ease-out) backwards;
     animation-delay: calc(var(--i, 0) * 90ms + 100ms);
   }
 }

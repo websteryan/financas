@@ -1,7 +1,7 @@
 import { isCloud } from "./supabase/config";
 import { supabaseBrowser } from "./supabase/client";
 import { addMonthsISO, currentYM, monthStart, shiftYM, todayISO, uid } from "./format";
-import type { Account, Budget, Category, Investment, NewInvestment, NewTransaction, Transaction } from "./types";
+import type { Account, Budget, PaymentMethod, Category, Investment, NewInvestment, NewTransaction, Transaction } from "./types";
 
 export interface Repo {
   listAccounts(): Promise<Account[]>;
@@ -83,10 +83,24 @@ const cloudRepo: Repo = {
     return check(await sb.from("transactions").select("*").order("date", { ascending: false }));
   },
   async addTransactions(rows) {
-    check(await supabaseBrowser().from("transactions").insert(rows));
+    const sb = supabaseBrowser();
+    const res = await sb.from("transactions").insert(rows);
+    // Banco ainda sem a coluna "method" (SQL pendente): grava sem ela para não travar o app.
+    if (res.error && /method/i.test(res.error.message)) {
+      check(await sb.from("transactions").insert(rows.map(({ method: _m, ...r }) => r)));
+      return;
+    }
+    check(res);
   },
   async updateTransaction(id, patch) {
-    check(await supabaseBrowser().from("transactions").update(patch).eq("id", id));
+    const sb = supabaseBrowser();
+    const res = await sb.from("transactions").update(patch).eq("id", id);
+    if (res.error && /method/i.test(res.error.message)) {
+      const { method: _m, ...rest } = patch;
+      check(await sb.from("transactions").update(rest).eq("id", id));
+      return;
+    }
+    check(res);
   },
   async deleteTransaction(id) {
     check(await supabaseBrowser().from("transactions").delete().eq("id", id));
@@ -140,9 +154,9 @@ const KEY = "financas-demo-v1";
 
 function seed(): LocalDB {
   const accounts: Account[] = [
-    { id: uid(), name: "Nubank", type: "credito", color: "#6d4af0" },
+    { id: uid(), name: "Nubank", type: "debito", color: "#7545e8" },
     { id: uid(), name: "Itaú", type: "debito", color: "#f97316" },
-    { id: uid(), name: "Pix", type: "pix", color: "#14b8a6" },
+    { id: uid(), name: "Carteira", type: "dinheiro", color: "#14b8a6" },
   ];
   const c = (name: string, kind: Category["kind"], color: string): Category => ({ id: uid(), name, kind, color });
   const categories: Category[] = [
@@ -158,7 +172,7 @@ function seed(): LocalDB {
     c("Freelance", "receita", "#14b8a6"),
   ];
   const cat = (n: string) => categories.find((x) => x.name === n)!.id;
-  const [card, debit, pix] = accounts.map((a) => a.id);
+  const [nu, itau] = accounts.map((a) => a.id);
   const now = currentYM();
   const today = todayISO();
   const tx: Transaction[] = [];
@@ -170,6 +184,7 @@ function seed(): LocalDB {
     description: string,
     account: string,
     category: string,
+    method?: PaymentMethod,
   ) => {
     const ym = shiftYM(now, -monthsAgo);
     const date = monthStart(ym).slice(0, 8) + String(day).padStart(2, "0");
@@ -177,23 +192,24 @@ function seed(): LocalDB {
     tx.push({
       id: uid(), kind, amount_cents: cents, description, date,
       account_id: account, category_id: cat(category),
+      method: kind === "despesa" ? method ?? "debito" : null,
       group_id: null, installment: null, installments: null,
     });
   };
   // salários organizados e gastos com valores variados (dados fictícios)
   for (let i = 0; i < 6; i++) {
     const v = 1 + ((i * 7) % 5) / 40;
-    add(i, 5, "receita", 685000, "Salário", debit, "Salário");
-    if (i % 2 === 0) add(i, 18, "receita", Math.round(124000 * v), "Projeto freelance", pix, "Freelance");
-    add(i, 10, "despesa", 189000, "Aluguel", debit, "Moradia");
-    add(i, 12, "despesa", Math.round(61237 * v), "Supermercado", card, "Mercado");
-    add(i, 3, "despesa", 5590, "Streaming e música", card, "Assinaturas");
-    add(i, 8, "despesa", Math.round(14320 * v), "Combustível", card, "Transporte");
-    add(i, 14, "despesa", Math.round(8790 * v), "Almoço", pix, "Alimentação");
-    add(i, 16, "despesa", Math.round(23150 / v), "Restaurante", card, "Alimentação");
-    add(i, 2, "despesa", Math.round(4280 * v), "Uber", pix, "Transporte");
-    add(i, 21, "despesa", Math.round(16900 / v), "Cinema e bar", card, "Lazer");
-    if (i % 3 === 1) add(i, 9, "despesa", 31000, "Consulta", debit, "Saúde");
+    add(i, 5, "receita", 685000, "Salário", itau, "Salário");
+    if (i % 2 === 0) add(i, 18, "receita", Math.round(124000 * v), "Projeto freelance", itau, "Freelance");
+    add(i, 10, "despesa", 189000, "Aluguel", itau, "Moradia", "debito");
+    add(i, 12, "despesa", Math.round(61237 * v), "Supermercado", nu, "Mercado", "credito");
+    add(i, 3, "despesa", 5590, "Streaming e música", nu, "Assinaturas", "credito");
+    add(i, 8, "despesa", Math.round(14320 * v), "Combustível", nu, "Transporte", "credito");
+    add(i, 14, "despesa", Math.round(8790 * v), "Almoço", itau, "Alimentação", "pix");
+    add(i, 16, "despesa", Math.round(23150 / v), "Restaurante", nu, "Alimentação", "credito");
+    add(i, 2, "despesa", Math.round(4280 * v), "Uber", itau, "Transporte", "pix");
+    add(i, 21, "despesa", Math.round(16900 / v), "Cinema e bar", nu, "Lazer", "credito");
+    if (i % 3 === 1) add(i, 9, "despesa", 31000, "Consulta", itau, "Saúde", "debito");
   }
   // uma compra parcelada
   const group = uid();
@@ -201,7 +217,7 @@ function seed(): LocalDB {
   for (let k = 0; k < 4; k++) {
     tx.push({
       id: uid(), kind: "despesa", amount_cents: 32475, description: "Fone de ouvido",
-      date: addMonthsISO(first, k), account_id: card, category_id: cat("Outros"),
+      date: addMonthsISO(first, k), account_id: nu, category_id: cat("Outros"), method: "credito",
       group_id: group, installment: k + 1, installments: 4,
     });
   }

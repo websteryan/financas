@@ -39,6 +39,9 @@ create table if not exists public.transactions (
 );
 
 create index if not exists transactions_user_date_idx on public.transactions (user_id, date desc);
+-- Forma de pagamento do gasto (credito, debito, pix, dinheiro); a mesma conta aceita todas
+alter table public.transactions add column if not exists method text check (method in ('credito', 'debito', 'pix', 'dinheiro'));
+
 create index if not exists transactions_group_idx on public.transactions (group_id);
 create index if not exists transactions_account_idx on public.transactions (account_id);
 create index if not exists transactions_category_idx on public.transactions (category_id);
@@ -101,9 +104,8 @@ security definer set search_path = ''
 as $$
 begin
   insert into public.accounts (user_id, name, type, color) values
-    (new.id, 'Cartão de crédito', 'credito', '#6d4af0'),
-    (new.id, 'Conta corrente', 'debito', '#3b82f6'),
-    (new.id, 'Pix', 'pix', '#14b8a6');
+    (new.id, 'Conta principal', 'debito', '#7545e8'),
+    (new.id, 'Carteira', 'dinheiro', '#14b8a6');
 
   insert into public.categories (user_id, name, kind, color) values
     (new.id, 'Alimentação', 'despesa', '#f97316'),

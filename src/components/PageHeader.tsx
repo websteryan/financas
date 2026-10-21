@@ -25,7 +25,7 @@ export function Panel({ title, action, children, className = "" }: { title?: str
     <section className={`card p-5 sm:p-6 ${className}`}>
       {(title || action) && (
         <div className="mb-4 flex items-center justify-between gap-3">
-          {title && <h2 className="text-[17px] font-medium">{title}</h2>}
+          {title && <h2 className="whitespace-nowrap text-[17px] font-medium">{title}</h2>}
           {action}
         </div>
       )}

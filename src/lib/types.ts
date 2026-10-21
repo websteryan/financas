@@ -1,5 +1,14 @@
 export type AccountType = "credito" | "debito" | "pix" | "dinheiro";
 export type Kind = "despesa" | "receita";
+/** Forma de pagamento de um lançamento (a mesma conta aceita todas). */
+export type PaymentMethod = "credito" | "debito" | "pix" | "dinheiro";
+
+export const PAYMENT_LABEL: Record<PaymentMethod, string> = {
+  credito: "Crédito",
+  debito: "Débito",
+  pix: "Pix",
+  dinheiro: "Dinheiro",
+};
 
 export interface Account {
   id: string;
@@ -26,7 +35,14 @@ export interface Transaction {
   group_id: string | null;
   installment: number | null;
   installments: number | null;
+  /** Pode faltar em lançamentos antigos; use methodOf(). */
+  method?: PaymentMethod | null;
   created_at?: string;
+}
+
+/** Forma de pagamento: a gravada ou, em lançamentos antigos, a deduzida do tipo antigo da conta. */
+export function methodOf(tx: Pick<Transaction, "method">, account?: Pick<Account, "type">): PaymentMethod {
+  return tx.method ?? account?.type ?? "debito";
 }
 
 export type NewTransaction = Omit<Transaction, "id" | "created_at">;

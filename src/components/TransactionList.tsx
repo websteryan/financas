@@ -5,7 +5,7 @@ import { PencilSimple, Trash } from "./icons";
 import { showToast } from "./ui";
 import { dayLabel, money } from "@/lib/format";
 import { useFinance } from "@/lib/store";
-import type { Transaction } from "@/lib/types";
+import { PAYMENT_LABEL, methodOf, type Transaction } from "@/lib/types";
 
 export function Amount({ tx, className = "" }: { tx: Pick<Transaction, "kind" | "amount_cents">; className?: string }) {
   const income = tx.kind === "receita";
@@ -96,7 +96,12 @@ export function TransactionRow({ tx, anim = "" , index = 0 }: { tx: Transaction;
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[16px] font-medium text-fg">{tx.description}</span>
         <span className="block truncate text-[13px] text-muted">
-          {[cat?.name ?? "Sem categoria", acc?.name, tx.installments ? `${tx.installment}/${tx.installments}` : null]
+          {[
+            cat?.name ?? "Sem categoria",
+            acc?.name,
+            tx.kind === "despesa" ? PAYMENT_LABEL[methodOf(tx, acc)] : null,
+            tx.installments ? `${tx.installment}/${tx.installments}` : null,
+          ]
             .filter(Boolean)
             .join(" \u2022 ")}
         </span>

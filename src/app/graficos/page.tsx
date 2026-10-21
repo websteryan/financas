@@ -4,6 +4,7 @@ import { useState } from "react";
 import { BalanceLine, CompositionBar, RankBars, StatBars } from "@/components/charts/Charts";
 import { PageHeader, Panel } from "@/components/PageHeader";
 import { AccountGlyph, Empty, Segmented, Skeleton } from "@/components/ui";
+import { PAYMENT_LABEL, methodOf, type PaymentMethod } from "@/lib/types";
 import { byAccount, byCategory, dailyBalance, monthlySeries, statBuckets, type StatMode } from "@/lib/derive";
 import { currentYM, daysInMonth, money, parseISO, todayISO } from "@/lib/format";
 import { totals, useFinance } from "@/lib/store";
@@ -18,8 +19,19 @@ export default function GraficosPage() {
   const cats = byCategory(f.monthTx, f.categories, kind);
   const accs = byAccount(f.monthTx, f.accounts, kind).map((a) => ({
     ...a,
-    icon: a.account ? <AccountGlyph type={a.account.type} color={a.account.color} size={24} /> : undefined,
+    icon: a.account ? <AccountGlyph color={a.account.color} size={24} /> : undefined,
   }));
+  const byMethod = (Object.keys(PAYMENT_LABEL) as PaymentMethod[])
+    .map((m) => ({
+      id: m,
+      label: PAYMENT_LABEL[m],
+      color: { credito: "#7545e8", debito: "#3b82f6", pix: "#14b8a6", dinheiro: "#eab308" }[m],
+      value: f.monthTx
+        .filter((x) => x.kind === "despesa" && methodOf(x, f.accountById(x.account_id)) === m)
+        .reduce((n, x) => n + x.amount_cents, 0),
+    }))
+    .filter((x) => x.value > 0)
+    .sort((a, b) => b.value - a.value);
   const balance = dailyBalance(f.monthTx, f.month);
   const series = monthlySeries(f.windowTx, f.month);
   const t = totals(f.monthTx);
@@ -107,6 +119,12 @@ export default function GraficosPage() {
             </div>
           )}
         </Panel>
+
+        {kind === "despesa" && (
+          <Panel title="Por forma de pagamento">
+            {f.loading ? <Skeleton className="h-40" /> : byMethod.length === 0 ? <Empty title="Sem gastos" text="Nenhum gasto neste mês." /> : <RankBars items={byMethod} />}
+          </Panel>
+        )}
 
         <Panel title="Por conta">
           {f.loading ? (
