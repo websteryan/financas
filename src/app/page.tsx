@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowDownLeft, ArrowRight, ArrowUpRight, CaretDown, Check, X } from "@/components/icons";
+import { ArrowDownLeft, ArrowRight, ArrowUpRight, CaretDown, Check, Eye, EyeSlash, X } from "@/components/icons";
 import { CashflowBars, Donut, RankBars, type CashDatum } from "@/components/charts/Charts";
 import { DemoBanner } from "@/components/DemoBanner";
 import { Panel } from "@/components/PageHeader";
 import { TransactionList } from "@/components/TransactionList";
-import { AccountGlyph, BigMoney, Button, Empty, MonthPicker, Segmented, Skeleton } from "@/components/ui";
+import { AccountGlyph, BigMoney, Button, IconButton, Empty, MonthPicker, Segmented, Skeleton } from "@/components/ui";
 import { NewButton } from "@/components/PageHeader";
 import { Logo } from "@/components/Logo";
 import { byCategory, monthlySeries, statBuckets, type StatMode } from "@/lib/derive";
@@ -36,8 +36,9 @@ export default function ResumoPage() {
   const [pick, setPick] = useState<string | null>(null);
 
   const balance = useCountUp(t.balance);
+  const total = useCountUp(f.totalBalance);
 
-  const accRows = f.accounts.map((a) => ({ id: a.id, name: a.name, color: a.color, balance: totals(f.monthTx.filter((x) => x.account_id === a.id)).balance }));
+  const accRows = f.accounts.map((a) => ({ id: a.id, name: a.name, color: a.color, balance: f.balanceOf(a.id) }));
 
   const buckets: CashDatum[] = (() => {
     if (tab === "economia") {
@@ -78,24 +79,49 @@ export default function ResumoPage() {
         {/* Saldo + contas */}
         <section className="rise lg:col-span-3">
           <div className="flex items-center justify-between gap-3">
-            <p className="whitespace-nowrap text-[15px] font-medium text-muted">Saldo do mês</p>
-            <MonthPicker value={f.month} onChange={f.setMonth} />
+            <p className="whitespace-nowrap text-[15px] font-medium text-muted">Saldo total</p>
+            <IconButton label={f.hidden ? "Mostrar valores" : "Ocultar valores"} onClick={f.toggleHidden} className="size-9">
+              {f.hidden ? <EyeSlash size={17} /> : <Eye size={17} />}
+            </IconButton>
           </div>
           {f.loading ? (
             <Skeleton className="mt-3 h-12 w-56" />
           ) : (
-            <p className={`mt-2 text-[44px] leading-none tracking-tight sm:text-[56px] ${balance < 0 ? "text-expense" : ""}`}>
-              <BigMoney cents={balance} />
+            <p className={`mt-2 text-[44px] leading-none tracking-tight sm:text-[56px] ${total < 0 ? "text-expense" : ""}`}>
+              <BigMoney cents={total} />
             </p>
           )}
-          {!f.loading && delta != null && delta !== 0 && (
-            <p className="mt-2.5 text-[13px] text-muted">
-              <span className={delta > 0 ? "text-expense" : "text-income"}>
-                {delta > 0 ? "▲" : "▼"} {Math.abs(delta)}%
-              </span>{" "}
-              em gastos vs {prev?.label}
-            </p>
-          )}
+
+          <div className="card mt-5 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="whitespace-nowrap text-[14px] font-medium text-muted">Resultado do mês</p>
+              <MonthPicker value={f.month} onChange={f.setMonth} />
+            </div>
+            {f.loading ? (
+              <Skeleton className="mt-3 h-8 w-40" />
+            ) : (
+              <p className={`num mt-2 text-[26px] font-semibold leading-none tracking-tight ${balance < 0 ? "text-expense" : ""}`}>
+                {balance > 0 ? "+ " : ""}
+                {money(balance)}
+              </p>
+            )}
+            <div className="mt-3 flex gap-5 text-[13px] text-muted">
+              <span>
+                Receitas <span className="num text-income">{money(t.income)}</span>
+              </span>
+              <span>
+                Gastos <span className="num text-fg">{money(t.expense)}</span>
+              </span>
+            </div>
+            {!f.loading && delta != null && delta !== 0 && (
+              <p className="mt-2 text-[13px] text-muted">
+                <span className={delta > 0 ? "text-expense" : "text-income"}>
+                  {delta > 0 ? "\u25B2" : "\u25BC"} {Math.abs(delta)}%
+                </span>{" "}
+                em gastos vs {prev?.label}
+              </p>
+            )}
+          </div>
 
           <div className="mt-5 grid grid-cols-2 gap-2.5">
             <button

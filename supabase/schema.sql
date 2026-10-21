@@ -135,3 +135,6 @@ create trigger on_auth_user_created
 
 -- Ícone da categoria (chave do ícone escolhido no app)
 alter table public.categories add column if not exists icon text;
+
+-- Ajuste de saldo e transferência entre contas (não contam como gasto nem receita)
+alter table public.transactions add column if not exists special text check (special in ('ajuste', 'transferencia'));

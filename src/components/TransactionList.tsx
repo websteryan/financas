@@ -1,17 +1,17 @@
 "use client";
 
 import { useRef, type CSSProperties, type PointerEvent as RPointerEvent } from "react";
-import { PencilSimple, Trash } from "./icons";
+import { ArrowsLeftRight, PencilSimple, SlidersHorizontal, Trash } from "./icons";
 import { CategoryGlyph, showToast } from "./ui";
 import { dayLabel, money } from "@/lib/format";
 import { useFinance } from "@/lib/store";
 import { PAYMENT_LABEL, methodOf, type Transaction } from "@/lib/types";
 
-export function Amount({ tx, className = "" }: { tx: Pick<Transaction, "kind" | "amount_cents">; className?: string }) {
-  const income = tx.kind === "receita";
+export function Amount({ tx, className = "" }: { tx: Pick<Transaction, "kind" | "amount_cents"> & { special?: Transaction["special"] }; className?: string }) {
+  const income = tx.kind === "receita" && !tx.special;
   return (
     <span className={`num whitespace-nowrap font-semibold ${income ? "text-income" : "text-fg"} ${className}`}>
-      {income ? "+" : "-"} {money(tx.amount_cents)}
+      {tx.kind === "receita" ? "+" : "-"} {money(tx.amount_cents)}
     </span>
   );
 }
@@ -24,7 +24,7 @@ export function TransactionRow({ tx, anim = "" , index = 0 }: { tx: Transaction;
   const moved = useRef(false);
 
   function onDown(e: RPointerEvent) {
-    if (e.pointerType === "mouse") return;
+    if (e.pointerType === "mouse" || tx.special) return;
     swipe.current = { x: e.clientX, y: e.clientY, dx: 0, lock: null };
     moved.current = false;
   }
@@ -85,11 +85,17 @@ export function TransactionRow({ tx, anim = "" , index = 0 }: { tx: Transaction;
       style={{ "--i": index } as CSSProperties}
       className={`${leaving ? "item-out" : anim} group relative flex w-full touch-pan-y items-center gap-3.5 bg-surface px-4 py-3 text-left transition-[background-color,transform] hover:bg-surface-2 active:bg-surface-2`}
     >
-      <CategoryGlyph category={cat} size={44} fallback={tx.description} />
+      {tx.special ? (
+        <span className="cat-glyph inline-flex size-11 shrink-0 items-center justify-center" style={{ "--c": "#8b8b93" } as CSSProperties} aria-hidden>
+          {tx.special === "transferencia" ? <ArrowsLeftRight size={20} weight="bold" /> : <SlidersHorizontal size={20} weight="bold" />}
+        </span>
+      ) : (
+        <CategoryGlyph category={cat} size={44} fallback={tx.description} />
+      )}
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[16px] font-medium text-fg">{tx.description}</span>
         <span className="block truncate text-[13px] text-muted">
-          {cat?.name ?? "Sem categoria"}
+          {tx.special ? (tx.special === "transferencia" ? "Transferência" : "Ajuste") : (cat?.name ?? "Sem categoria")}
           {acc && (
             <>
               {" \u2022 "}
@@ -97,7 +103,7 @@ export function TransactionRow({ tx, anim = "" , index = 0 }: { tx: Transaction;
               {acc.name}
             </>
           )}
-          {tx.kind === "despesa" && ` \u2022 ${PAYMENT_LABEL[methodOf(tx, acc)]}`}
+          {tx.kind === "despesa" && !tx.special && ` \u2022 ${PAYMENT_LABEL[methodOf(tx, acc)]}`}
           {tx.installments ? ` \u2022 ${tx.installment}/${tx.installments}` : ""}
         </span>
       </span>
@@ -127,7 +133,7 @@ export function TransactionList({ items }: { items: Transaction[] }) {
   return (
     <div className="flex flex-col gap-6">
       {days.map((d) => {
-        const net = d.items.reduce((s, t) => s + (t.kind === "receita" ? t.amount_cents : -t.amount_cents), 0);
+        const net = d.items.filter((t) => !t.special).reduce((s, t) => s + (t.kind === "receita" ? t.amount_cents : -t.amount_cents), 0);
         return (
           <section key={d.date}>
             <header className="flex items-baseline justify-between px-2 pb-2">

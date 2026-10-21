@@ -5,7 +5,7 @@ import { Buildings, Briefcase, Coins, DotsThreeOutline, PiggyBank, Plus, Trash, 
 import { Donut } from "@/components/charts/Charts";
 import { PageHeader, Panel } from "@/components/PageHeader";
 import { Button, Chip, Empty, Field, Sheet, Skeleton, inputClass, showToast } from "@/components/ui";
-import { dayLabel, money, todayISO } from "@/lib/format";
+import { dayLabel, money, todayISO, moneyPlain } from "@/lib/format";
 import { useCountUp } from "@/lib/motion";
 import { useFinance } from "@/lib/store";
 import { INVESTMENT_TYPE_COLOR, INVESTMENT_TYPE_LABEL, type Investment, type InvestmentType } from "@/lib/types";
@@ -241,7 +241,7 @@ function InvestmentSheet({ draft, onClose }: { draft: Draft | null; onClose: () 
             id="inv-valor"
             inputMode="numeric"
             autoComplete="off"
-            value={money(form.cents)}
+            value={moneyPlain(form.cents)}
             onChange={(e) => setForm({ ...form, cents: Number(e.target.value.replace(/\D/g, "").slice(0, 11) || "0") })}
             className="num font-display w-full bg-transparent text-center text-[44px] font-semibold leading-tight outline-none"
           />

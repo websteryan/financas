@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Minus, Plus, Trash } from "./icons";
 import { AccountGlyph, Button, Chip, Field, MethodIcon, Segmented, Sheet, inputClass, showToast } from "./ui";
-import { addMonthsISO, money, splitCents, todayISO, uid } from "@/lib/format";
+import { addMonthsISO, money, splitCents, todayISO, uid, moneyPlain } from "@/lib/format";
 import { useFinance } from "@/lib/store";
-import { PAYMENT_LABEL, methodOf, type Kind, type NewTransaction, type PaymentMethod } from "@/lib/types";
+import { PAYMENT_LABEL, methodOf, type Kind, type NewTransaction, type PaymentMethod, type Transaction } from "@/lib/types";
 
 const LAST_ACCOUNT = "financas-ultima-conta";
 const LAST_METHOD = "financas-ultima-forma";
@@ -152,6 +152,8 @@ export function TransactionSheet() {
     }
   }
 
+  if (editing?.special) return <SpecialSheet tx={editing} onClose={closeSheet} />;
+
   const title = editing ? "Editar lançamento" : "Novo lançamento";
   const saveLabel = editing ? "Salvar" : kind === "despesa" ? "Adicionar gasto" : "Adicionar receita";
 
@@ -224,7 +226,7 @@ export function TransactionSheet() {
             ref={amountRef}
             inputMode="numeric"
             autoComplete="off"
-            value={money(cents)}
+            value={moneyPlain(cents)}
             onChange={(e) => {
               const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
               setCents(Number(digits || "0"));
@@ -347,5 +349,60 @@ export function TransactionSheet() {
         <button type="submit" hidden />
       </form>
     </Sheet>
+  );
+}
+
+/** Ajuste de saldo e transferência não se editam: só se vê o que foi e, se preciso, se exclui. */
+function SpecialSheet({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
+  const { accountById, deleteGroup, deleteTransaction } = useFinance();
+  const [busy, setBusy] = useState(false);
+  const acc = accountById(tx.account_id);
+  async function remove() {
+    setBusy(true);
+    try {
+      if (tx.special === "transferencia" && tx.group_id) await deleteGroup(tx.group_id);
+      else await deleteTransaction(tx.id);
+      onClose();
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Não foi possível excluir.");
+    }
+    setBusy(false);
+  }
+  return (
+    <Sheet
+      open
+      onClose={onClose}
+      title={tx.special === "transferencia" ? "Transferência" : "Ajuste de saldo"}
+      footer={
+        <Button variant="danger" onClick={remove} disabled={busy}>
+          <Trash size={18} weight="bold" /> {tx.special === "transferencia" ? "Excluir transferência" : "Excluir ajuste"}
+        </Button>
+      }
+    >
+      <div className="flex flex-col gap-4">
+        <p className="num text-[34px] font-semibold tracking-tight">
+          {tx.kind === "receita" ? "+" : "-"} {money(tx.amount_cents)}
+        </p>
+        <div className="card divide-y divide-line">
+          <Row label="Descrição" value={tx.description} />
+          <Row label="Conta" value={acc?.name ?? "Conta removida"} />
+          <Row label="Data" value={tx.date.split("-").reverse().join("/")} />
+        </div>
+        <p className="text-[13px] text-muted">
+          {tx.special === "transferencia"
+            ? "Mover dinheiro entre suas contas não conta como gasto nem receita. Excluir remove os dois lados da transferência."
+            : "Ajustes corrigem o saldo da conta e não contam como gasto nem receita."}
+        </p>
+      </div>
+    </Sheet>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 px-4 py-3 text-[15px]">
+      <span className="text-muted">{label}</span>
+      <span className="min-w-0 truncate text-right font-medium">{value}</span>
+    </div>
   );
 }

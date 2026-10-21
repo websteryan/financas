@@ -39,6 +39,8 @@ export interface Transaction {
   installments: number | null;
   /** Pode faltar em lançamentos antigos; use methodOf(). */
   method?: PaymentMethod | null;
+  /** Movimentos que não são gasto nem receita: ajuste de saldo e transferência entre contas. */
+  special?: SpecialKind | null;
   created_at?: string;
 }
 
@@ -46,6 +48,8 @@ export interface Transaction {
 export function methodOf(tx: Pick<Transaction, "method">, account?: Pick<Account, "type">): PaymentMethod {
   return tx.method ?? account?.type ?? "debito";
 }
+
+export type SpecialKind = "ajuste" | "transferencia";
 
 export type NewTransaction = Omit<Transaction, "id" | "created_at">;
 

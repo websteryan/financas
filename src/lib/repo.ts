@@ -14,6 +14,8 @@ export interface Repo {
   deleteCategory(id: string): Promise<void>;
   listTransactions(from: string, to: string): Promise<Transaction[]>;
   listAllTransactions(): Promise<Transaction[]>;
+  /** Saldo real de cada conta (soma de todos os lançamentos desde o início), em centavos. */
+  accountBalances(): Promise<Record<string, number>>;
   addTransactions(rows: NewTransaction[]): Promise<void>;
   updateTransaction(id: string, patch: Partial<NewTransaction>): Promise<void>;
   deleteTransaction(id: string): Promise<void>;
@@ -93,9 +95,25 @@ const cloudRepo: Repo = {
     const sb = supabaseBrowser();
     return check(await sb.from("transactions").select("*").order("date", { ascending: false }));
   },
+  async accountBalances() {
+    const sb = supabaseBrowser();
+    const out: Record<string, number> = {};
+    // O Supabase devolve no máximo 1000 linhas por consulta: lê em páginas.
+    for (let from = 0; ; from += 1000) {
+      const rows = check(
+        await sb.from("transactions").select("account_id,kind,amount_cents").order("id").range(from, from + 999),
+      ) as Pick<Transaction, "account_id" | "kind" | "amount_cents">[];
+      for (const r of rows) out[r.account_id] = (out[r.account_id] ?? 0) + (r.kind === "receita" ? r.amount_cents : -r.amount_cents);
+      if (rows.length < 1000) break;
+    }
+    return out;
+  },
   async addTransactions(rows) {
     const sb = supabaseBrowser();
     const res = await sb.from("transactions").insert(rows);
+    if (res.error && /special/i.test(res.error.message)) {
+      throw new Error("Falta rodar o SQL novo no Supabase (coluna special) para usar ajuste de saldo e transferência.");
+    }
     // Banco ainda sem a coluna "method" (SQL pendente): grava sem ela para não travar o app.
     if (res.error && /method/i.test(res.error.message)) {
       check(await sb.from("transactions").insert(rows.map(({ method: _m, ...r }) => r)));
@@ -322,6 +340,11 @@ const localRepo: Repo = {
     return load()
       .transactions.filter((t) => t.date >= from && t.date <= to)
       .sort(byDateDesc);
+  },
+  async accountBalances() {
+    const out: Record<string, number> = {};
+    for (const t of load().transactions) out[t.account_id] = (out[t.account_id] ?? 0) + (t.kind === "receita" ? t.amount_cents : -t.amount_cents);
+    return out;
   },
   async listAllTransactions() {
     return load().transactions.sort(byDateDesc);

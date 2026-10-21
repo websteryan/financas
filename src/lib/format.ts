@@ -6,11 +6,25 @@ const brlCompact = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 1,
 });
 
-export function money(cents: number): string {
+let hidden = false;
+/** Modo "ocultar valores": todo dinheiro mostrado vira bolinhas (campos de digitação usam moneyPlain). */
+export function setHiddenValues(v: boolean) {
+  hidden = v;
+}
+export function valuesHidden(): boolean {
+  return hidden;
+}
+
+export function moneyPlain(cents: number): string {
   return brl.format(cents / 100);
 }
 
+export function money(cents: number): string {
+  return hidden ? "R$ \u2022\u2022\u2022\u2022" : brl.format(cents / 100);
+}
+
 export function moneyCompact(cents: number): string {
+  if (hidden) return "\u2022\u2022\u2022\u2022";
   if (Math.abs(cents) < 100000) return brl.format(Math.round(cents / 100));
   return brlCompact.format(cents / 100);
 }

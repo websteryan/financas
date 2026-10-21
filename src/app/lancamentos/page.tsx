@@ -20,8 +20,8 @@ export default function LancamentosPage() {
 
   const items = useMemo(() => {
     const q = normalize(query.trim());
-    return f.monthTx.filter((t) => {
-      if (kind !== "tudo" && t.kind !== kind) return false;
+    return f.monthAll.filter((t) => {
+      if (kind !== "tudo" && (t.special || t.kind !== kind)) return false;
       if (account && t.account_id !== account) return false;
       if (q) {
         const cat = f.categoryById(t.category_id)?.name ?? "";
@@ -96,10 +96,10 @@ export default function LancamentosPage() {
             </div>
           ) : items.length === 0 ? (
             <Empty
-              title={f.monthTx.length ? "Nenhum resultado" : "Nada lançado neste mês"}
-              text={f.monthTx.length ? "Tente outro filtro ou outra busca." : "Use o botão + para registrar o primeiro."}
+              title={f.monthAll.length ? "Nenhum resultado" : "Nada lançado neste mês"}
+              text={f.monthAll.length ? "Tente outro filtro ou outra busca." : "Use o botão + para registrar o primeiro."}
               action={
-                !f.monthTx.length && (
+                !f.monthAll.length && (
                   <Button variant="primary" onClick={() => f.openNew()}>
                     Novo lançamento
                   </Button>

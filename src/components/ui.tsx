@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type ButtonHTMLAttributes, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { Bank, Check, CaretLeft, CaretRight, CreditCard, Money, PixLogo, X } from "./icons";
-import { currentYM, money, monthLabel, shiftYM, type YM } from "@/lib/format";
+import { currentYM, money, monthLabel, shiftYM, valuesHidden, type YM } from "@/lib/format";
 import { categoryIcon } from "@/lib/category-icons";
 import type { PaymentMethod } from "@/lib/types";
 
@@ -337,6 +337,7 @@ export function Skeleton({ className = "" }: { className?: string }) {
 
 /** Valor grande: símbolo e centavos mais discretos, reais em destaque. */
 export function BigMoney({ cents, className = "" }: { cents: number; className?: string }) {
+  if (valuesHidden()) return <span className={`num font-display font-bold ${className}`}>{"R$ \u2022\u2022\u2022\u2022"}</span>;
   const txt = money(Math.abs(cents)); // "R$ 4.685,88"
   const cut = txt.lastIndexOf(",");
   const sym = txt.slice(0, txt.search(/\d/));

@@ -1,11 +1,12 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { CaretDown, CaretUp, CloudSlash, DotsSixVertical, DownloadSimple, PencilSimple, Plus, SignOut } from "@/components/icons";
+import { ArrowsLeftRight, CaretDown, CaretUp, SlidersHorizontal, CloudSlash, DotsSixVertical, DownloadSimple, PencilSimple, Plus, SignOut } from "@/components/icons";
+import { AdjustSheet, TransferSheet } from "@/components/AccountActions";
 import { PageHeader, Panel } from "@/components/PageHeader";
 import { AccountGlyph, Button, CategoryGlyph, Field, IconButton, Segmented, Sheet, Skeleton, inputClass, showToast } from "@/components/ui";
 import { CATEGORY_ICONS, iconKeyFor } from "@/lib/category-icons";
-import { money } from "@/lib/format";
+import { money, moneyPlain } from "@/lib/format";
 import { THEMES, getTheme, setTheme, type Theme } from "@/lib/theme";
 import { repo } from "@/lib/repo";
 import { useFinance } from "@/lib/store";
@@ -19,6 +20,8 @@ export default function ContasPage() {
   const f = useFinance();
   const [accDraft, setAccDraft] = useState<AccountDraft | null>(null);
   const [catDraft, setCatDraft] = useState<CategoryDraft | null>(null);
+  const [adjustFor, setAdjustFor] = useState<Account | null>(null);
+  const [transferFor, setTransferFor] = useState<Account | null>(null);
   const [exporting, setExporting] = useState(false);
 
   const countBy = new Map<string, number>();
@@ -128,7 +131,20 @@ export default function ContasPage() {
         </Panel>
       </div>
 
-      <AccountSheet draft={accDraft} onClose={() => setAccDraft(null)} />
+      <AccountSheet
+        draft={accDraft}
+        onClose={() => setAccDraft(null)}
+        onAdjust={(a) => {
+          setAccDraft(null);
+          setAdjustFor(a);
+        }}
+        onTransfer={(a) => {
+          setAccDraft(null);
+          setTransferFor(a);
+        }}
+      />
+      <AdjustSheet account={adjustFor} onClose={() => setAdjustFor(null)} />
+      <TransferSheet account={transferFor} onClose={() => setTransferFor(null)} />
       <CategorySheet draft={catDraft} onClose={() => setCatDraft(null)} />
     </div>
   );
@@ -211,7 +227,7 @@ function ThemePanel() {
   );
 }
 
-function AccountSheet({ draft, onClose }: { draft: AccountDraft | null; onClose: () => void }) {
+function AccountSheet({ draft, onClose, onAdjust, onTransfer }: { draft: AccountDraft | null; onClose: () => void; onAdjust: (a: Account) => void; onTransfer: (a: Account) => void }) {
   const f = useFinance();
   const [form, setForm] = useState<AccountDraft | null>(draft);
   const [confirm, setConfirm] = useState(false);
@@ -278,6 +294,16 @@ function AccountSheet({ draft, onClose }: { draft: AccountDraft | null; onClose:
           void save();
         }}
       >
+        {form.id && (
+          <div className="grid grid-cols-2 gap-2">
+            <Button className="h-11 text-[14px]" onClick={() => onTransfer(form as Account)}>
+              <ArrowsLeftRight size={17} weight="bold" /> Transferir
+            </Button>
+            <Button className="h-11 text-[14px]" onClick={() => onAdjust(form as Account)}>
+              <SlidersHorizontal size={17} weight="bold" /> Ajustar saldo
+            </Button>
+          </div>
+        )}
         <Field label="Nome" htmlFor="conta-nome">
           <input
             id="conta-nome"
@@ -394,7 +420,7 @@ function CategorySheet({ draft, onClose }: { draft: CategoryDraft | null; onClos
               inputMode="numeric"
               autoComplete="off"
               className={`${inputClass} num`}
-              value={money(limit)}
+              value={moneyPlain(limit)}
               onChange={(e) => setLimit(Number(e.target.value.replace(/\D/g, "").slice(0, 10) || "0"))}
             />
           </Field>
@@ -554,8 +580,8 @@ function AccountsPanel({ spentBy, countBy, onEdit, onNew }: { spentBy: Map<strin
                       {!editing && (
                         <>
                           <span className="text-right">
-                            <span className="num block text-[15px] font-medium">{money(spentBy.get(a.id) ?? 0)}</span>
-                            <span className="block text-[12px] text-muted">gasto no mês</span>
+                            <span className={`num block text-[15px] font-medium ${f.balanceOf(a.id) < 0 ? "text-expense" : ""}`}>{money(f.balanceOf(a.id))}</span>
+                            <span className="block text-[12px] text-muted">saldo</span>
                           </span>
                           <PencilSimple size={16} className="ml-1 text-muted" />
                         </>

@@ -245,6 +245,12 @@ body::before {
   color: var(--c);
   border-radius: var(--r-glyph);
 }
+/* Conta: a cor escolhida para a instituição aparece em qualquer tema */
+.acc-glyph {
+  background: color-mix(in srgb, var(--c) 17%, transparent);
+  color: var(--c);
+  border-radius: var(--r-glyph);
+}
 .glow {
   box-shadow: none;
 }
