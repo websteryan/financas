@@ -161,7 +161,7 @@ function Row({ color, label, value }: { color?: string; label: string; value: st
 
 /* -------------------------------------------------- Saldo acumulado no mês */
 
-export function BalanceLine({ values, labels, height = 180 }: { values: number[]; labels: string[]; height?: number }) {
+export function BalanceLine({ values, labels, height = 180, labelPrefix = "Dia " }: { values: number[]; labels: string[]; height?: number; labelPrefix?: string }) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
   const padL = 40;
@@ -241,7 +241,7 @@ export function BalanceLine({ values, labels, height = 180 }: { values: number[]
       )}
       {hover !== null && (
         <Tooltip x={x(hover)} y={0} width={width}>
-          <Row label={`Dia ${labels[hover]}`} value={money(values[hover])} />
+          <Row label={`${labelPrefix}${labels[hover]}`} value={money(values[hover])} />
         </Tooltip>
       )}
     </div>

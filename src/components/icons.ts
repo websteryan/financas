@@ -81,4 +81,5 @@ export {
   DotsThreeOutline,
   Sun,
   Palette,
+  Target,
 } from "@phosphor-icons/react";

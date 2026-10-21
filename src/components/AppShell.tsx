@@ -11,7 +11,7 @@ const NAV = [
   { href: "/", label: "Resumo", icon: House },
   { href: "/lancamentos", label: "Lançamentos", icon: ListBullets },
   { href: "/graficos", label: "Gráficos", icon: ChartPieSlice },
-  { href: "/investimentos", label: "Investimentos", icon: ChartLineUp },
+  { href: "/investimentos", label: "Patrimônio", icon: ChartLineUp },
   { href: "/contas", label: "Contas", icon: Wallet },
 ] as const;
 

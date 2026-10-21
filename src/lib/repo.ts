@@ -1,7 +1,7 @@
 import { isCloud } from "./supabase/config";
 import { supabaseBrowser } from "./supabase/client";
 import { addMonthsISO, currentYM, monthStart, shiftYM, todayISO, uid } from "./format";
-import type { Account, Budget, NewRecurringRule, RecurringRule, PaymentMethod, Category, Investment, NewInvestment, NewTransaction, Transaction } from "./types";
+import type { Account, Budget, Goal, GoalDeposit, NewGoal, NewGoalDeposit, NewRecurringRule, RecurringRule, PaymentMethod, Category, Investment, NewInvestment, NewTransaction, Transaction } from "./types";
 
 export interface Repo {
   listAccounts(): Promise<Account[]>;
@@ -29,6 +29,14 @@ export interface Repo {
   listBudgets(): Promise<Budget[]>;
   saveBudget(b: { category_id: string; limit_cents: number }): Promise<void>;
   deleteBudget(categoryId: string): Promise<void>;
+  listGoals(): Promise<Goal[]>;
+  saveGoal(g: NewGoal & { id?: string }): Promise<void>;
+  deleteGoal(id: string): Promise<void>;
+  listGoalDeposits(): Promise<GoalDeposit[]>;
+  addGoalDeposit(d: NewGoalDeposit): Promise<void>;
+  deleteGoalDeposit(id: string): Promise<void>;
+  /** Variação líquida de todas as contas por mês ("YYYY-MM"), incluindo ajustes. */
+  monthlyNet(): Promise<Record<string, number>>;
   signOut(): Promise<void>;
 }
 
@@ -158,6 +166,39 @@ const cloudRepo: Repo = {
   async deleteInvestment(id) {
     check(await supabaseBrowser().from("investments").delete().eq("id", id));
   },
+  async listGoals() {
+    return check(await supabaseBrowser().from("goals").select("id,name,target_cents,deadline,color,created_at").order("created_at"));
+  },
+  async saveGoal({ id, ...g }) {
+    const sb = supabaseBrowser();
+    if (id) check(await sb.from("goals").update(g).eq("id", id));
+    else check(await sb.from("goals").insert(g));
+  },
+  async deleteGoal(id) {
+    check(await supabaseBrowser().from("goals").delete().eq("id", id));
+  },
+  async listGoalDeposits() {
+    return check(await supabaseBrowser().from("goal_deposits").select("id,goal_id,amount_cents,date").order("date"));
+  },
+  async addGoalDeposit(d) {
+    check(await supabaseBrowser().from("goal_deposits").insert(d));
+  },
+  async deleteGoalDeposit(id) {
+    check(await supabaseBrowser().from("goal_deposits").delete().eq("id", id));
+  },
+  async monthlyNet() {
+    const sb = supabaseBrowser();
+    const out: Record<string, number> = {};
+    for (let from = 0; ; from += 1000) {
+      const rows = check(await sb.from("transactions").select("date,kind,amount_cents").order("id").range(from, from + 999)) as Pick<Transaction, "date" | "kind" | "amount_cents">[];
+      for (const r of rows) {
+        const k = r.date.slice(0, 7);
+        out[k] = (out[k] ?? 0) + (r.kind === "receita" ? r.amount_cents : -r.amount_cents);
+      }
+      if (rows.length < 1000) break;
+    }
+    return out;
+  },
   async listRecurring() {
     return check(
       await supabaseBrowser()
@@ -197,6 +238,8 @@ interface LocalDB {
   investments?: Investment[];
   budgets?: Budget[];
   recurring?: RecurringRule[];
+  goals?: Goal[];
+  goalDeposits?: GoalDeposit[];
 }
 
 const KEY = "financas-demo-v1";
@@ -408,6 +451,42 @@ const localRepo: Repo = {
     mutate((db) => {
       db.investments = (db.investments ?? []).filter((x) => x.id !== id);
     });
+  },
+  async listGoals() {
+    return load().goals ?? [];
+  },
+  async saveGoal({ id, ...g }) {
+    mutate((db) => {
+      const list = db.goals ?? [];
+      db.goals = id ? list.map((x) => (x.id === id ? { ...x, ...g } : x)) : [...list, { id: uid(), ...g }];
+    });
+  },
+  async deleteGoal(id) {
+    mutate((db) => {
+      db.goals = (db.goals ?? []).filter((x) => x.id !== id);
+      db.goalDeposits = (db.goalDeposits ?? []).filter((x) => x.goal_id !== id);
+    });
+  },
+  async listGoalDeposits() {
+    return load().goalDeposits ?? [];
+  },
+  async addGoalDeposit(d) {
+    mutate((db) => {
+      db.goalDeposits = [...(db.goalDeposits ?? []), { id: uid(), ...d }];
+    });
+  },
+  async deleteGoalDeposit(id) {
+    mutate((db) => {
+      db.goalDeposits = (db.goalDeposits ?? []).filter((x) => x.id !== id);
+    });
+  },
+  async monthlyNet() {
+    const out: Record<string, number> = {};
+    for (const t of load().transactions) {
+      const k = t.date.slice(0, 7);
+      out[k] = (out[k] ?? 0) + (t.kind === "receita" ? t.amount_cents : -t.amount_cents);
+    }
+    return out;
   },
   async listRecurring() {
     return load().recurring ?? [];

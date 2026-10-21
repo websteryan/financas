@@ -78,6 +78,27 @@ export interface RecurringRule {
 }
 export type NewRecurringRule = Omit<RecurringRule, "id">;
 
+/** Meta de economia: guardar um valor até uma data (opcional). Os aportes são só registro, não mexem nas contas. */
+export interface Goal {
+  id: string;
+  name: string;
+  target_cents: number;
+  /** Prazo "YYYY-MM-DD", se houver. */
+  deadline: string | null;
+  color: string;
+  created_at?: string;
+}
+export type NewGoal = Omit<Goal, "id" | "created_at">;
+
+/** Aporte (positivo) ou retirada (negativo) em uma meta. */
+export interface GoalDeposit {
+  id: string;
+  goal_id: string;
+  amount_cents: number;
+  date: string;
+}
+export type NewGoalDeposit = Omit<GoalDeposit, "id">;
+
 export type InvestmentType = "renda_fixa" | "acoes" | "fiis" | "cripto" | "fundos" | "outros";
 
 export interface Investment {

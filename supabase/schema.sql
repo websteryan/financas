@@ -159,3 +159,32 @@ alter table public.recurring_rules enable row level security;
 drop policy if exists "own recurring" on public.recurring_rules;
 create policy "own recurring" on public.recurring_rules
   for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+
+-- Metas de economia e aportes
+create table if not exists public.goals (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  name text not null,
+  target_cents bigint not null check (target_cents > 0),
+  deadline date,
+  color text not null default '#6d4af0',
+  created_at timestamptz not null default now()
+);
+alter table public.goals enable row level security;
+drop policy if exists "own goals" on public.goals;
+create policy "own goals" on public.goals
+  for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+
+create table if not exists public.goal_deposits (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  goal_id uuid not null references public.goals(id) on delete cascade,
+  amount_cents bigint not null check (amount_cents <> 0),
+  date date not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists goal_deposits_goal_idx on public.goal_deposits (goal_id);
+alter table public.goal_deposits enable row level security;
+drop policy if exists "own goal deposits" on public.goal_deposits;
+create policy "own goal deposits" on public.goal_deposits
+  for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));

@@ -5,7 +5,7 @@ import { currentYM, monthEnd, monthStart, setHiddenValues, shiftYM, todayISO, ty
 import { prefersReducedMotion } from "./motion";
 import { repo } from "./repo";
 import { pendingOf, type PendingItem } from "./recurring";
-import type { Account, Budget, Category, Investment, Kind, NewInvestment, NewRecurringRule, NewTransaction, RecurringRule, Transaction } from "./types";
+import type { Account, Budget, Goal, GoalDeposit, NewGoal, NewGoalDeposit, Category, Investment, Kind, NewInvestment, NewRecurringRule, NewTransaction, RecurringRule, Transaction } from "./types";
 
 /** Quantos meses (incluindo o selecionado) ficam carregados para os gráficos de evolução. */
 export const WINDOW_MONTHS = 6;
@@ -49,6 +49,15 @@ interface Finance {
   deleteCategory: (id: string) => Promise<void>;
   /** Ids em animação de saída (a linha desliza antes de sumir). */
   removing: Set<string>;
+  goals: Goal[];
+  goalDeposits: GoalDeposit[];
+  goalsError: string | null;
+  saveGoal: (g: NewGoal & { id?: string }) => Promise<void>;
+  deleteGoal: (id: string) => Promise<void>;
+  addGoalDeposit: (d: NewGoalDeposit) => Promise<void>;
+  deleteGoalDeposit: (id: string) => Promise<void>;
+  /** Variação líquida por mês ("YYYY-MM") de todas as contas, para a evolução do patrimônio. */
+  netByMonth: Record<string, number>;
   budgets: Budget[];
   /** Orçamentos indisponíveis (ex.: tabela ainda não criada); o app segue sem eles. */
   budgetsError: string | null;
@@ -84,6 +93,10 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   const [rules, setRules] = useState<RecurringRule[]>([]);
   const [recurringError, setRecurringError] = useState<string | null>(null);
   const [removing, setRemoving] = useState<Set<string>>(new Set());
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [goalDeposits, setGoalDeposits] = useState<GoalDeposit[]>([]);
+  const [goalsError, setGoalsError] = useState<string | null>(null);
+  const [netByMonth, setNetByMonth] = useState<Record<string, number>>({});
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [budgetsError, setBudgetsError] = useState<string | null>(null);
   const [investments, setInvestments] = useState<Investment[]>([]);
@@ -111,6 +124,19 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         /* saldos indisponíveis: segue sem eles */
       }
       setError(null);
+      try {
+        setNetByMonth(await repo.monthlyNet());
+      } catch {
+        /* evolução indisponível */
+      }
+      try {
+        const [g, d] = await Promise.all([repo.listGoals(), repo.listGoalDeposits()]);
+        setGoals(g);
+        setGoalDeposits(d);
+        setGoalsError(null);
+      } catch (e) {
+        setGoalsError(e instanceof Error ? e.message : "Metas indisponíveis.");
+      }
       try {
         setBudgets(await repo.listBudgets());
         setBudgetsError(null);
@@ -245,6 +271,14 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       reorderAccounts: (ids) => run(() => repo.reorderAccounts(ids)),
       saveCategory: (c) => run(() => repo.saveCategory(c)),
       deleteCategory: (id) => run(() => repo.deleteCategory(id)),
+      goals,
+      goalDeposits,
+      goalsError,
+      saveGoal: (g) => run(() => repo.saveGoal(g)),
+      deleteGoal: (id) => run(() => repo.deleteGoal(id)),
+      addGoalDeposit: (d) => run(() => repo.addGoalDeposit(d)),
+      deleteGoalDeposit: (id) => run(() => repo.deleteGoalDeposit(id)),
+      netByMonth,
       budgets,
       budgetsError,
       saveBudget: (b) => run(() => repo.saveBudget(b)),
@@ -276,7 +310,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       accountById: (id) => accMap.get(id),
       categoryById: (id) => (id ? catMap.get(id) : undefined),
     };
-  }, [month, accounts, categories, rawTx, balances, rules, recurringError, hidden, toggleHidden, budgets, budgetsError, removing, animatedRemove, investments, investmentsError, loading, error, reload, sheet, run, to]);
+  }, [month, accounts, categories, rawTx, balances, rules, recurringError, hidden, toggleHidden, budgets, budgetsError, goals, goalDeposits, goalsError, netByMonth, removing, animatedRemove, investments, investmentsError, loading, error, reload, sheet, run, to]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

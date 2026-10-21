@@ -4,7 +4,8 @@ import { useState, type CSSProperties } from "react";
 import { Buildings, Briefcase, Coins, DotsThreeOutline, PiggyBank, Plus, Trash, TrendUp, WarningCircle } from "@/components/icons";
 import { Donut } from "@/components/charts/Charts";
 import { PageHeader, Panel } from "@/components/PageHeader";
-import { Button, Chip, Empty, Field, Sheet, Skeleton, inputClass, showToast } from "@/components/ui";
+import { GoalsView, NetWorthView } from "@/components/Wealth";
+import { Button, Chip, Empty, Field, Segmented, Sheet, Skeleton, inputClass, showToast } from "@/components/ui";
 import { dayLabel, money, todayISO, moneyPlain } from "@/lib/format";
 import { useCountUp } from "@/lib/motion";
 import { useFinance } from "@/lib/store";
@@ -14,7 +15,7 @@ type Draft = { id?: string; name: string; type: InvestmentType; institution: str
 
 const emptyDraft = (): Draft => ({ name: "", type: "renda_fixa", institution: "", cents: 0, date: todayISO() });
 
-export default function InvestimentosPage() {
+function InvestmentsView() {
   const f = useFinance();
   const [draft, setDraft] = useState<Draft | null>(null);
 
@@ -34,11 +35,12 @@ export default function InvestimentosPage() {
 
   return (
     <div className="fade-in">
-      <PageHeader title="Investimentos" month={false} newButton={false}>
+      <div className="mb-4 flex items-center justify-between gap-3 px-1">
+        <h2 className="text-[19px] font-semibold">Investimentos</h2>
         <Button variant="primary" className="h-11 px-4 text-sm" onClick={() => setDraft(emptyDraft())}>
           <Plus size={16} weight="bold" /> Novo
         </Button>
-      </PageHeader>
+      </div>
 
       {f.investmentsError ? (
         <div className="card flex gap-3 p-5 text-sm">
@@ -88,7 +90,7 @@ export default function InvestimentosPage() {
 
       {!f.investmentsError && (
         <section className="mt-8">
-          <h2 className="mb-4 px-1 text-[19px] font-semibold">Minhas aplicações</h2>
+          <h2 className="mb-4 px-1 text-[17px] font-medium text-muted">Minhas aplicações</h2>
           {f.loading ? (
             <div className="flex flex-col gap-2.5">
               {[0, 1, 2].map((i) => (
@@ -267,5 +269,29 @@ function InvestmentSheet({ draft, onClose }: { draft: Draft | null; onClose: () 
         <button type="submit" hidden />
       </form>
     </Sheet>
+  );
+}
+
+type Tab = "patrimonio" | "metas" | "investimentos";
+
+export default function PatrimonioPage() {
+  const [tab, setTab] = useState<Tab>("patrimonio");
+  return (
+    <div className="fade-in">
+      <PageHeader title="Patrimônio" month={tab === "metas"} newButton={false} />
+      <Segmented
+        className="mb-6 lg:w-96"
+        value={tab}
+        onChange={setTab}
+        options={[
+          { value: "patrimonio", label: "Total" },
+          { value: "metas", label: "Metas" },
+          { value: "investimentos", label: "Aplicações" },
+        ]}
+      />
+      {tab === "patrimonio" && <NetWorthView />}
+      {tab === "metas" && <GoalsView />}
+      {tab === "investimentos" && <InvestmentsView />}
+    </div>
   );
 }
